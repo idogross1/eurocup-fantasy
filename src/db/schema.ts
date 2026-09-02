@@ -183,3 +183,60 @@ export const settings = sqliteTable("settings", {
   key: text("key").primaryKey(),
   value: text("value").notNull(), // JSON
 });
+
+// --- Dunkest sync (step 4) -------------------------------------------------
+
+/** Your actual fantasy teams as they exist in the EuroCup Fantasy app. */
+export const syncedTeams = sqliteTable("synced_teams", {
+  dunkestTeamId: integer("dunkest_team_id").primaryKey(),
+  name: text("name").notNull(),
+  /** which of our optimizer teams (1/2/3) this real team corresponds to */
+  mappedFantasyTeamId: integer("mapped_fantasy_team_id").references(() => fantasyTeams.id),
+  pts: real("pts"),
+  totalPts: real("total_pts"),
+  position: integer("position"),
+  syncedAt: text("synced_at")
+    .notNull()
+    .default(sql`(current_timestamp)`),
+});
+
+/** Snapshot of a synced team's real roster for a matchday (for trade diffing). */
+export const syncedRosterEntries = sqliteTable(
+  "synced_roster_entries",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    dunkestTeamId: integer("dunkest_team_id")
+      .notNull()
+      .references(() => syncedTeams.dunkestTeamId),
+    matchdayId: integer("matchday_id")
+      .notNull()
+      .references(() => matchdays.id),
+    playerId: integer("player_id")
+      .notNull()
+      .references(() => players.id),
+    slot: text("slot"), // may be unknown from the API
+    isCaptain: integer("is_captain", { mode: "boolean" }).notNull().default(false),
+    formationId: integer("formation_id"),
+    syncedAt: text("synced_at")
+      .notNull()
+      .default(sql`(current_timestamp)`),
+  },
+  (t) => [
+    uniqueIndex("synced_roster_team_matchday_player_idx").on(
+      t.dunkestTeamId,
+      t.matchdayId,
+      t.playerId,
+    ),
+  ],
+);
+
+export const syncLog = sqliteTable("sync_log", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  startedAt: text("started_at")
+    .notNull()
+    .default(sql`(current_timestamp)`),
+  finishedAt: text("finished_at"),
+  ok: integer("ok", { mode: "boolean" }).notNull().default(false),
+  summary: text("summary"), // JSON
+  error: text("error"),
+});

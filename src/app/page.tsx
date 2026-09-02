@@ -2,7 +2,9 @@ import Link from "next/link";
 import { sql } from "drizzle-orm";
 
 import { db, schema } from "@/db";
+import { getLastSync } from "@/lib/kv";
 import { getCurrentMatchday } from "@/lib/players";
+import { getTeamsForCurrentMatchday } from "@/lib/teams";
 
 export const dynamic = "force-dynamic";
 
@@ -10,24 +12,50 @@ async function counts() {
   const [p] = await db.select({ n: sql<number>`count(*)` }).from(schema.players);
   const [s] = await db.select({ n: sql<number>`count(*)` }).from(schema.playerSnapshots);
   const [t] = await db.select({ n: sql<number>`count(*)` }).from(schema.realTeams);
-  const ft = await db.select().from(schema.fantasyTeams).orderBy(schema.fantasyTeams.id);
-  return { players: p?.n ?? 0, snapshots: s?.n ?? 0, teams: t?.n ?? 0, fantasyTeams: ft };
+  return { players: p?.n ?? 0, snapshots: s?.n ?? 0, teams: t?.n ?? 0 };
 }
 
 export default async function Home() {
-  const [{ players, snapshots, teams, fantasyTeams }, matchday] = await Promise.all([
+  const [{ players, snapshots, teams }, matchday, { teams: teamViews }] = await Promise.all([
     counts(),
     getCurrentMatchday(),
+    getTeamsForCurrentMatchday(),
   ]);
+  const lastSync = getLastSync(db);
+  const syncedTeams = await db
+    .select()
+    .from(schema.syncedTeams)
+    .orderBy(schema.syncedTeams.dunkestTeamId);
+  const mappedById = new Map(
+    syncedTeams
+      .filter((s) => s.mappedFantasyTeamId != null)
+      .map((s) => [s.mappedFantasyTeamId as number, s]),
+  );
 
   const empty = players === 0;
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <p className="mt-1 text-sm text-[var(--muted)]">
-          {matchday ? `Current: ${matchday.label} (Round ${matchday.number})` : "No matchday loaded"}
+      <div className="flex items-baseline justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Dashboard</h1>
+          <p className="mt-1 text-sm text-[var(--muted)]">
+            {matchday
+              ? `Current: ${matchday.label} (Round ${matchday.number})`
+              : "No matchday loaded"}
+          </p>
+        </div>
+        <p className="text-xs text-[var(--muted)]">
+          {lastSync
+            ? `Last sync: ${new Date(lastSync.startedAt + "Z").toLocaleString()} ${
+                lastSync.ok ? "ok" : "failed — check Settings"
+              }`
+            : "Never synced — "}
+          {!lastSync && (
+            <Link href="/settings" className="text-[var(--accent)]">
+              set up token
+            </Link>
+          )}
         </p>
       </div>
 
@@ -35,8 +63,12 @@ export default async function Home() {
         <div className="rounded-lg border border-[var(--border)] bg-[var(--panel)] p-5 text-sm">
           <p className="font-medium">No data yet.</p>
           <p className="mt-1 text-[var(--muted)]">
-            Run <code className="rounded bg-[var(--panel-2)] px-1.5 py-0.5">npm run setup</code> to
-            create the database and import the players CSV.
+            Run <code className="rounded bg-[var(--panel-2)] px-1.5 py-0.5">npm run setup</code> for
+            the CSV bootstrap, or add a token on{" "}
+            <Link href="/settings" className="text-[var(--accent)]">
+              Settings
+            </Link>{" "}
+            and sync live data.
           </p>
         </div>
       ) : (
@@ -44,31 +76,61 @@ export default async function Home() {
           <Stat label="Players" value={players} />
           <Stat label="Snapshots" value={snapshots} />
           <Stat label="Real teams" value={teams} />
-          <Stat label="Fantasy teams" value={fantasyTeams.length} />
+          <Stat label="Synced teams" value={syncedTeams.length} />
         </div>
       )}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        {fantasyTeams.map((t) => (
-          <div
-            key={t.id}
-            className="rounded-lg border border-[var(--border)] bg-[var(--panel)] p-4"
-          >
-            <div className="flex items-baseline justify-between">
-              <span className="font-medium">Team {t.id}</span>
-              <span className="text-xs uppercase tracking-wide text-[var(--muted)]">
-                {t.strategy}
-              </span>
+        {teamViews.map((t) => {
+          const real = mappedById.get(t.id);
+          return (
+            <div
+              key={t.id}
+              className="rounded-lg border border-[var(--border)] bg-[var(--panel)] p-4"
+            >
+              <div className="flex items-baseline justify-between">
+                <span className="font-medium">
+                  Team {t.id} · {t.name}
+                </span>
+                <span className="text-xs uppercase tracking-wide text-[var(--muted)]">
+                  {t.strategy}
+                </span>
+              </div>
+              <div className="mt-3 flex gap-4 text-sm tabular-nums">
+                <span>
+                  <span className="text-[var(--muted)]">Proj </span>
+                  <span className="font-semibold">{t.projPoints || "—"}</span>
+                </span>
+                <span>
+                  <span className="text-[var(--muted)]">Cr </span>
+                  {t.creditsUsed || "—"}/{t.budget}
+                </span>
+                {t.formationName && (
+                  <span>
+                    <span className="text-[var(--muted)]">Form </span>
+                    {t.formationName}
+                  </span>
+                )}
+              </div>
+              {real && (
+                <p className="mt-2 text-xs text-[var(--muted)]">
+                  ↔ {real.name}
+                  {real.position != null ? ` · global rank ${real.position}` : ""}
+                  {real.totalPts != null ? ` · ${real.totalPts} pts` : ""}
+                </p>
+              )}
             </div>
-            <p className="mt-2 text-sm text-[var(--muted)]">
-              Budget {t.budget} · risk k={t.riskK}
-            </p>
-            <p className="mt-3 text-xs text-[var(--muted)]">Roster builder arrives in step 3.</p>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      <div>
+      <div className="flex gap-3">
+        <Link
+          href="/teams"
+          className="inline-block rounded-md border border-[var(--border)] bg-[var(--panel-2)] px-4 py-2 text-sm hover:border-[var(--accent)]"
+        >
+          View teams →
+        </Link>
         <Link
           href="/players"
           className="inline-block rounded-md border border-[var(--border)] bg-[var(--panel-2)] px-4 py-2 text-sm hover:border-[var(--accent)]"
