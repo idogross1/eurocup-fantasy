@@ -14,6 +14,7 @@
     "db:reset": "tsx scripts/migrate.ts --reset",
     "import:csv": "tsx scripts/import-csv.ts",
     "project": "tsx scripts/project.ts",
+    "optimize": "tsx scripts/optimize.ts",
     "setup": "npm run db:migrate && npm run import:csv && npm run project"
   },
   "dependencies": {
@@ -21,7 +22,8 @@
     "drizzle-orm": "^0.38.4",
     "next": "^15.1.6",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "yalps": "^0.5.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",

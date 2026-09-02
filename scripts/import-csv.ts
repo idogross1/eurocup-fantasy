@@ -156,6 +156,7 @@ function main() {
     positionCounts: { Guard: 4, Forward: 4, Center: 2, "Head Coach": 1 },
     captainMultiplier: 2,
     benchWeight: 0.5,
+    contrarianWeight: 0.2, // aggressive team: value -= contrarianWeight * ownership%
     projectionModel: {}, // overrides on top of DEFAULT_MODEL_PARAMS; see src/lib/projections/model.ts
   };
   for (const [key, value] of Object.entries(seedSettings)) {
