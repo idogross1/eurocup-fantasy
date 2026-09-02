@@ -15,6 +15,13 @@
       "when": 1788377685685,
       "tag": "0001_dazzling_diamondback",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1788378851118,
+      "tag": "0002_spooky_molten_man",
+      "breakpoints": true
     }
   ]
 }

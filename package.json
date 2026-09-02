@@ -16,6 +16,7 @@
     "project": "tsx scripts/project.ts",
     "optimize": "tsx scripts/optimize.ts",
     "sync": "tsx scripts/sync.ts",
+    "trades": "tsx scripts/trades.ts",
     "setup": "npm run db:migrate && npm run import:csv && npm run project"
   },
   "dependencies": {

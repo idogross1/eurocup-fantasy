@@ -40,7 +40,7 @@ export type Paginated<T> = {
 export type LeagueConfig = {
   current_players_list_id?: number;
   current_matchday?: { id?: number; number?: number };
-  current_round?: { id?: number; number?: number };
+  current_round?: { id?: number; number?: number; started_at?: string };
   teams?: (DunkTeamRef & { logo_url?: string })[];
   game_modes_configs?: {
     game_mode_id?: number;

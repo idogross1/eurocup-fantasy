@@ -58,7 +58,7 @@ export async function loadOptimizerPool(
 }
 
 /** Trim the pool to a tractable size for the MILP without losing the optimum. */
-function prefilter(pool: OptimizerPlayer[], lockIds: Set<number>): OptimizerPlayer[] {
+export function prefilterPool(pool: OptimizerPlayer[], lockIds: Set<number>): OptimizerPlayer[] {
   const keep = new Set<number>();
   const byPos = new Map<string, OptimizerPlayer[]>();
   for (const p of pool) {
@@ -100,7 +100,7 @@ export async function optimizeAllTeams(db: DB, matchdayId: number): Promise<Opti
   );
 
   const teams = await db.select().from(schema.fantasyTeams).orderBy(schema.fantasyTeams.id);
-  const filtered = prefilter(pool, lockIds);
+  const filtered = prefilterPool(pool, lockIds);
 
   const results: TeamResult[] = [];
   const priorRosters: { label: string; ids: Set<number>; cap: number }[] = [];

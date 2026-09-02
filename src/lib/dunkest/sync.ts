@@ -3,6 +3,7 @@ import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 
 import { schema } from "@/db/connection";
 import type { PlayerPosition } from "@/db/schema";
+import { setSetting } from "@/lib/kv";
 
 import { makeClient } from "./client";
 import { endpoints, fetchAllPlayers } from "./endpoints";
@@ -90,6 +91,8 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
   const mdId = lc.current_matchday?.id;
   const mdNum = lc.current_matchday?.number ?? 0;
   const plId = lc.current_players_list_id;
+  const roundStartedAt = lc.current_round?.started_at ?? null;
+  const roundNumber = lc.current_round?.number ?? null;
   if (!mdId || !plId) {
     throw new Error("league config missing current_matchday.id / current_players_list_id");
   }
@@ -106,6 +109,9 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
     .set({ isCurrent: false })
     .where(ne(schema.matchdays.id, mdId))
     .run();
+
+  // round state for trade-window advice (see src/lib/trades/window.ts)
+  setSetting(db, "currentRound", { number: roundNumber, startedAt: roundStartedAt });
 
   // real teams
   let teamsUpserted = 0;

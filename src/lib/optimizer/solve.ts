@@ -17,6 +17,8 @@ export type SolveOptions = {
   overlapGroups?: { label: string; ids: Set<number>; cap: number }[];
   contrarianWeight?: number;
   timeoutMs?: number;
+  /** keep at least (|anchor ∩ pool| − maxChanges) of these players (trade cap) */
+  anchor?: { ids: Set<number>; maxChanges: number };
 };
 
 /** Per-player value the optimizer maximizes, given the team's strategy. */
@@ -75,6 +77,12 @@ export function solveTeam(
     benchCenterLink: { equal: 0 },
   };
 
+  const anchorIds = opts.anchor?.ids ?? new Set<number>();
+  if (opts.anchor) {
+    const present = [...anchorIds].filter((id) => byId.has(id)).length;
+    constraints.anchorKeep = { min: Math.max(0, present - opts.anchor.maxChanges) };
+  }
+
   const variables: Record<string, Record<string, number>> = {};
   const binaries: string[] = [];
 
@@ -113,6 +121,7 @@ export function solveTeam(
     for (const g of opts.overlapGroups ?? []) {
       if (g.ids.has(p.id)) xVar[`overlap_${g.label}`] = 1;
     }
+    if (anchorIds.has(p.id)) xVar.anchorKeep = 1;
     if (lock.has(p.id)) {
       constraints[`lock_${p.id}`] = { equal: 1 };
       xVar[`lock_${p.id}`] = 1;
@@ -167,6 +176,7 @@ export function solveTeam(
     for (const g of opts.overlapGroups ?? []) {
       if (g.ids.has(p.id)) xVar[`overlap_${g.label}`] = 1;
     }
+    if (anchorIds.has(p.id)) xVar.anchorKeep = 1;
     if (lock.has(p.id)) {
       constraints[`lock_${p.id}`] = { equal: 1 };
       xVar[`lock_${p.id}`] = 1;

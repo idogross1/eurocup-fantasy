@@ -156,7 +156,13 @@ export const rosterEntries = sqliteTable(
   ],
 );
 
-/** Trade log. Empty until step 5. */
+/**
+ * Proposed roster moves for a team for a matchday. A move is:
+ *  - swap:  outPlayerId -> inPlayerId
+ *  - buy:   null        -> inPlayerId   (initial build / adding)
+ *  - sell:  outPlayerId -> null
+ * Regenerated each time the trade plan is computed; `applied` is user-toggled.
+ */
 export const trades = sqliteTable("trades", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   fantasyTeamId: integer("fantasy_team_id")
@@ -165,14 +171,11 @@ export const trades = sqliteTable("trades", {
   matchdayId: integer("matchday_id")
     .notNull()
     .references(() => matchdays.id),
-  outPlayerId: integer("out_player_id")
-    .notNull()
-    .references(() => players.id),
-  inPlayerId: integer("in_player_id")
-    .notNull()
-    .references(() => players.id),
+  outPlayerId: integer("out_player_id").references(() => players.id),
+  inPlayerId: integer("in_player_id").references(() => players.id),
   creditDelta: real("credit_delta").notNull(),
   projDelta: real("proj_delta").notNull(),
+  kind: text("kind").notNull().default("swap"), // 'swap' | 'buy' | 'sell'
   applied: integer("applied", { mode: "boolean" }).notNull().default(false),
   createdAt: text("created_at")
     .notNull()
