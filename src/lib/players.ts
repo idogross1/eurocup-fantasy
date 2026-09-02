@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 
 import { db, schema } from "@/db";
 
@@ -17,6 +17,10 @@ export type PlayerRow = {
   opponentAbbr: string | null;
   roundNumber: number | null;
   label: string | null;
+  projMean: number | null;
+  projFloor: number | null;
+  projCeiling: number | null;
+  projValue: number | null; // mean per credit
 };
 
 export type MatchdayRow = typeof schema.matchdays.$inferSelect;
@@ -59,11 +63,30 @@ export async function getPlayersForCurrentMatchday(): Promise<{
       opponentAbbr: schema.playerSnapshots.opponentAbbr,
       roundNumber: schema.playerSnapshots.roundNumber,
       label: schema.playerSnapshots.label,
+      projMean: schema.projections.mean,
+      projFloor: schema.projections.floor,
+      projCeiling: schema.projections.ceiling,
     })
     .from(schema.playerSnapshots)
     .innerJoin(schema.players, eq(schema.players.id, schema.playerSnapshots.playerId))
     .innerJoin(schema.realTeams, eq(schema.realTeams.abbr, schema.players.realTeamAbbr))
+    .leftJoin(
+      schema.projections,
+      and(
+        eq(schema.projections.playerId, schema.playerSnapshots.playerId),
+        eq(schema.projections.matchdayId, matchday.id),
+      ),
+    )
     .where(eq(schema.playerSnapshots.matchdayId, matchday.id));
 
-  return { matchday, players: rows };
+  return {
+    matchday,
+    players: rows.map((r) => ({
+      ...r,
+      projValue:
+        r.projMean != null && r.quotation > 0
+          ? Math.round((r.projMean / r.quotation) * 100) / 100
+          : null,
+    })),
+  };
 }

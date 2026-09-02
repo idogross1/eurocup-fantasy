@@ -11,7 +11,13 @@ type SortKey =
   | "quotation"
   | "avgPts"
   | "popularity"
-  | "opponentAbbr";
+  | "opponentAbbr"
+  | "projMean"
+  | "projFloor"
+  | "projCeiling"
+  | "projValue";
+
+const NUMERIC_NULLABLE: SortKey[] = ["projMean", "projFloor", "projCeiling", "projValue"];
 
 const POSITIONS = ["All", "Guard", "Forward", "Center", "Head Coach"] as const;
 
@@ -25,7 +31,7 @@ const POSITION_ORDER: Record<string, number> = {
 export function PlayersTable({ players }: { players: PlayerRow[] }) {
   const [query, setQuery] = useState("");
   const [position, setPosition] = useState<(typeof POSITIONS)[number]>("All");
-  const [sortKey, setSortKey] = useState<SortKey>("quotation");
+  const [sortKey, setSortKey] = useState<SortKey>("projMean");
   const [asc, setAsc] = useState(false);
 
   const rows = useMemo(() => {
@@ -50,8 +56,17 @@ export function PlayersTable({ players }: { players: PlayerRow[] }) {
           return dir * a.teamAbbr.localeCompare(b.teamAbbr);
         case "opponentAbbr":
           return dir * (a.opponentAbbr ?? "").localeCompare(b.opponentAbbr ?? "");
-        default:
+        default: {
+          if (NUMERIC_NULLABLE.includes(sortKey)) {
+            const av = a[sortKey] as number | null;
+            const bv = b[sortKey] as number | null;
+            if (av == null && bv == null) return 0;
+            if (av == null) return 1; // nulls always last
+            if (bv == null) return -1;
+            return dir * (av - bv);
+          }
           return dir * ((a[sortKey] as number) - (b[sortKey] as number));
+        }
       }
     });
     return out;
@@ -94,7 +109,7 @@ export function PlayersTable({ players }: { players: PlayerRow[] }) {
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
-        <table className="w-full min-w-[720px] text-sm">
+        <table className="w-full min-w-[960px] text-sm">
           <thead className="bg-[var(--panel)] text-left text-xs uppercase tracking-wide text-[var(--muted)]">
             <tr>
               <Th onClick={() => toggleSort("name")} active={sortKey === "name"} asc={asc}>
@@ -113,6 +128,38 @@ export function PlayersTable({ players }: { players: PlayerRow[] }) {
                 right
               >
                 Price
+              </Th>
+              <Th
+                onClick={() => toggleSort("projMean")}
+                active={sortKey === "projMean"}
+                asc={asc}
+                right
+              >
+                Proj
+              </Th>
+              <Th
+                onClick={() => toggleSort("projFloor")}
+                active={sortKey === "projFloor"}
+                asc={asc}
+                right
+              >
+                Floor
+              </Th>
+              <Th
+                onClick={() => toggleSort("projCeiling")}
+                active={sortKey === "projCeiling"}
+                asc={asc}
+                right
+              >
+                Ceil
+              </Th>
+              <Th
+                onClick={() => toggleSort("projValue")}
+                active={sortKey === "projValue"}
+                asc={asc}
+                right
+              >
+                Val
               </Th>
               <Th onClick={() => toggleSort("avgPts")} active={sortKey === "avgPts"} asc={asc} right>
                 Avg Pts
@@ -160,6 +207,18 @@ export function PlayersTable({ players }: { players: PlayerRow[] }) {
                   <span title={p.teamName}>{p.teamAbbr}</span>
                 </td>
                 <td className="px-3 py-2 text-right tabular-nums">{p.quotation.toFixed(1)}</td>
+                <td className="px-3 py-2 text-right tabular-nums font-medium">
+                  {p.projMean != null ? p.projMean.toFixed(1) : "—"}
+                </td>
+                <td className="px-3 py-2 text-right tabular-nums text-[var(--muted)]">
+                  {p.projFloor != null ? p.projFloor.toFixed(1) : "—"}
+                </td>
+                <td className="px-3 py-2 text-right tabular-nums text-[var(--muted)]">
+                  {p.projCeiling != null ? p.projCeiling.toFixed(1) : "—"}
+                </td>
+                <td className="px-3 py-2 text-right tabular-nums text-[var(--muted)]">
+                  {p.projValue != null ? p.projValue.toFixed(2) : "—"}
+                </td>
                 <td className="px-3 py-2 text-right tabular-nums text-[var(--muted)]">
                   {p.avgPts ? p.avgPts.toFixed(1) : "—"}
                 </td>
