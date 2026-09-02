@@ -80,7 +80,7 @@ export default async function SettingsPage() {
         <SyncButton disabled={!hasToken} />
         {lastSync && (
           <p className="text-xs text-[var(--muted)]">
-            Last run: {new Date(lastSync.startedAt + "Z").toLocaleString()} —{" "}
+            Last run: {new Date(lastSync.startedAt).toLocaleString()} —{" "}
             {lastSync.ok ? (
               <span className="text-emerald-400">ok</span>
             ) : lastSync.finishedAt ? (

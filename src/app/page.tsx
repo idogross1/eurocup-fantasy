@@ -47,7 +47,7 @@ export default async function Home() {
         </div>
         <p className="text-xs text-[var(--muted)]">
           {lastSync
-            ? `Last sync: ${new Date(lastSync.startedAt + "Z").toLocaleString()} ${
+            ? `Last sync: ${new Date(lastSync.startedAt).toLocaleString()} ${
                 lastSync.ok ? "ok" : "failed — check Settings"
               }`
             : "Never synced — "}

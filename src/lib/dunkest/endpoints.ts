@@ -14,13 +14,25 @@ import type {
   UserProfile,
 } from "./types";
 
+/** Most Dunkest endpoints wrap their payload in `{ data: ... }`; some don't. */
+function unwrap<T>(res: unknown): T {
+  if (res && typeof res === "object" && "data" in res) {
+    return (res as { data: T }).data;
+  }
+  return res as T;
+}
+
 export function endpoints(client: DunkestClient, leagueId = EUROCUP_LEAGUE_ID) {
   return {
-    gameConfig: () => client.get<unknown>(`/games/${GAME_ID}/config`),
+    gameConfig: () => client.get<unknown>(`/games/${GAME_ID}/config`).then((r) => unwrap(r)),
 
-    leagueConfig: () => client.get<LeagueConfig>(`/leagues/${leagueId}/config`),
+    leagueConfig: () =>
+      client
+        .get<{ data: LeagueConfig } | LeagueConfig>(`/leagues/${leagueId}/config`)
+        .then((r) => unwrap<LeagueConfig>(r)),
 
-    me: () => client.get<UserProfile>(`/user`),
+    me: () =>
+      client.get<{ data: UserProfile } | UserProfile>(`/user`).then((r) => unwrap<UserProfile>(r)),
 
     fantasyTeams: (gameMode = GAME_MODE_CONTEST) =>
       client.get<{ data: FantasyTeamSummary[] }>(`/user/fantasy-teams`, {
