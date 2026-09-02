@@ -1,0 +1,470 @@
+id,first_name,last_name,position,team_abbr,team_name,quotation,avg_pts,popularity,is_injured,probability_of_playing,opponent_abbr,round_number,started_from_bench,label
+3778,Trevion,Williams,Center,BKS,Bahcesehir College Istanbul,14,0,0,false,1,ROM,2,true,opponent
+3839,Nick,Calathes,Guard,PBC,PAOK Thessaloniki,9,0,0,false,1,MAN,2,true,opponent
+3871,Isiaha,Mike,Forward,BKS,Bahcesehir College Istanbul,12.6,0,0,false,1,ROM,2,true,opponent
+3873,Matthew,Morgan,Guard,ARI,Aris Thessaloniki,13,0,0,false,1,MSB,1,true,opponent
+3882,Neno,Dimitrijevic,Guard,ARI,Aris Thessaloniki,13,0,0,false,1,MSB,1,true,opponent
+3895,Manuchar,Markoishvili,Head Coach,BOS,Bosna BH Telecom Sarajevo,5,0,0,false,1,LIE,2,true,opponent
+3902,Louis,Olinde,Forward,URV,Umana Reyer Venice,10.2,0,0,false,1,SKY,1,true,opponent
+3941,Melvin,Ajinca,Guard,MSB,Le Mans Sarthe Basket,8.5,0,0,false,1,ARI,1,true,opponent
+3990,Kostas,Antetokounmpo,Center,ARI,Aris Thessaloniki,5,0,0,false,1,MSB,1,true,opponent
+4044,Dovis,Bickauskis,Guard,LIE,Lietkabelis Panevezys,5.7,0,0,false,1,BOS,2,true,opponent
+4045,Martynas,Varnas,Guard,RIG,Riga Zelli,11.6,0,0,false,1,DER,1,true,opponent
+4053,Nenad,Canak,Head Coach,LIE,Lietkabelis Panevezys,6.5,0,0,false,1,BOS,2,true,opponent
+4055,Vassilis,Toliopoulos,Guard,ARI,Aris Thessaloniki,9,0,0,false,1,MSB,1,true,opponent
+4063,Vassilis,Spanoulis,Head Coach,ARI,Aris Thessaloniki,10,0,0,false,1,MSB,1,true,opponent
+4068,Jaleen,Smith,Guard,JLM,Hapoel Midtown Jerusalem,12.5,0,0,false,1,ROS,1,true,opponent
+4069,Tyler,Cavanaugh,Forward,BKS,Bahcesehir College Istanbul,12.5,0,0,false,1,ROM,2,true,opponent
+4071,Axel,Bouteille,Forward,BUD,Buducnost VOLI Podgorica,11.6,0,0,false,1,WKS,2,true,opponent
+4074,Mateusz,Ponitka,Forward,BKS,Bahcesehir College Istanbul,8.2,0,0,false,1,ROM,2,true,opponent
+4078,Sasa,Djordjevic,Head Coach,BKS,Bahcesehir College Istanbul,9,0,0,false,1,ROM,2,true,opponent
+4080,Furkan,Haltali,Center,BKS,Bahcesehir College Istanbul,4,0,0,false,1,ROM,2,true,opponent
+4091,Yogi,Ferrell,Guard,BUD,Buducnost VOLI Podgorica,15,0,0,false,1,WKS,2,true,opponent
+4095,Juwan,Morgan,Forward,BUD,Buducnost VOLI Podgorica,12.5,0,0,false,1,WKS,2,true,opponent
+4099,Fletcher,Magee,Guard,BUD,Buducnost VOLI Podgorica,6,0,0,false,1,WKS,2,true,opponent
+4100,Andrejs,Zakelj,Head Coach,BUD,Buducnost VOLI Podgorica,9.5,0,0,false,1,WKS,2,true,opponent
+4101,Andrija,Slavkovic,Forward,BUD,Buducnost VOLI Podgorica,4,0,0,false,1,WKS,2,true,opponent
+4103,Jaka,Blazic,Guard,COL,Cedevita Olimpija Ljubljana,8,0,0,false,1,BUR,2,true,opponent
+4107,Devante,Jones,Guard,LDN,London Lions,15,0,0,false,1,SIA,2,true,opponent
+4110,Brynton,Lemar,Guard,RMA,Maxima Roma,9.5,0,0,false,1,UBT,2,true,opponent
+4112,Zvezdan,Mitrovic,Head Coach,COL,Cedevita Olimpija Ljubljana,8,0,0,false,1,BUR,2,true,opponent
+4113,Rok,Radovic,Forward,COL,Cedevita Olimpija Ljubljana,5.5,0,0,false,1,BUR,2,true,opponent
+4114,Ziga,Daneu,Center,COL,Cedevita Olimpija Ljubljana,4.4,0,0,false,1,BUR,2,true,opponent
+4117,Adrian,Nelson,Forward,JLB,Cosea JL Bourg-en-Bresse,8.5,0,0,false,1,NAP,2,true,opponent
+4121,Hugo,Benitez,Guard,MAN,Kids&Us Manresa,10.3,0,0,false,1,PBC,2,true,opponent
+4122,Frederic,Fauthoux,Head Coach,JLB,Cosea JL Bourg-en-Bresse,8,0,0,false,1,NAP,2,true,opponent
+4127,Anthony,Lamb,Forward,TTA,Turk Telekom Ankara,11.8,0,0,false,1,LLT,2,true,opponent
+4134,Jordan,Bayehe,Center,TRE,Dolomiti Energia Trento,8.2,0,0,false,1,NEP,1,true,opponent
+4135,Selom,Mawugbe,Center,TRE,Dolomiti Energia Trento,8.6,0,0,false,1,NEP,1,true,opponent
+4136,Alessandro,Rossi,Head Coach,TRE,Dolomiti Energia Trento,7,0,0,false,1,NEP,1,true,opponent
+4137,Toto,Forray,Guard,TRE,Dolomiti Energia Trento,4.1,0,0,false,1,NEP,1,true,opponent
+4138,Patrick,Hassan,Guard,TRE,Dolomiti Energia Trento,5.6,0,0,false,1,NEP,1,true,opponent
+4151,Jakub,Urbaniak,Forward,WKS,Slask Wroclaw,7.4,0,0,false,1,BUD,2,true,opponent
+4153,Justin,Smith,Forward,BUD,Buducnost VOLI Podgorica,10.5,0,0,false,1,WKS,2,true,opponent
+4157,Jared,Harper,Guard,JLM,Hapoel Midtown Jerusalem,17,0,0,false,1,ROS,1,true,opponent
+4158,Yovel,Zoosman,Guard,JLM,Hapoel Midtown Jerusalem,8.8,0,0,false,1,ROS,1,true,opponent
+4160,Sasa,Obradovic,Head Coach,JLM,Hapoel Midtown Jerusalem,9,0,0,false,1,ROS,1,true,opponent
+4161,Nimrod,Levi,Forward,JLM,Hapoel Midtown Jerusalem,4.5,0,0,false,1,ROS,1,true,opponent
+4197,Ty,Harrelson,Head Coach,ULM,Ratiopharm Ulm,7,0,0,false,1,BLK,2,true,opponent
+4209,Kyle,Alexander,Center,PBC,PAOK Thessaloniki,13.1,0,0,false,1,MAN,2,true,opponent
+4216,Erdem,Can,Head Coach,TTA,Turk Telekom Ankara,9,0,0,false,1,LLT,2,true,opponent
+4218,Ismet,Akpinar,Guard,BKS,Bahcesehir College Istanbul,4,0,0,false,1,ROM,2,true,opponent
+4224,Patrick,Richard,Guard,UBT,U-BT Cluj-Napoca,6.2,0,0,false,1,RMA,2,true,opponent
+4228,Mihai,Silvasan,Head Coach,UBT,U-BT Cluj-Napoca,7,0,0,false,1,RMA,2,true,opponent
+4229,Adam,Mokoka,Guard,ARI,Aris Thessaloniki,11.5,0,0,false,1,MSB,1,true,opponent
+4235,Amedeo,Tessitori,Center,URV,Umana Reyer Venice,8.2,0,0,false,1,SKY,1,true,opponent
+4236,Kyle,Wiltjer,Forward,URV,Umana Reyer Venice,11.3,0,0,false,1,SKY,1,true,opponent
+4238,Jordan,Parks,Forward,URV,Umana Reyer Venice,11,0,0,false,1,SKY,1,true,opponent
+4239,Neven,Spahija,Head Coach,URV,Umana Reyer Venice,8,0,0,false,1,SKY,1,true,opponent
+4241,Carl,Wheatle,Forward,RMA,Maxima Roma,7,0,0,false,1,UBT,2,true,opponent
+4245,Giga,Janelidze,Forward,URV,Umana Reyer Venice,4,0,0,false,1,SKY,1,true,opponent
+4249,Ethan,Happ,Forward,LLT,La Laguna Tenerife,10.8,0,0,false,1,TTA,2,true,opponent
+4253,Stefan,Jovic,Guard,ARI,Aris Thessaloniki,9,0,0,false,1,MSB,1,true,opponent
+4254,Xabi,Lopez-Arostegui,Forward,LLT,La Laguna Tenerife,8.5,0,0,false,1,TTA,2,true,opponent
+4344,Tarik,Phillip,Guard,LDN,London Lions,11.5,0,0,false,1,SIA,2,true,opponent
+4348,Karim,Jallow,Forward,DER,Baglietto Derthona Tortona,9,0,0,false,1,RIG,1,true,opponent
+4370,Cedi,Osman,Forward,PBC,PAOK Thessaloniki,15,0,0,false,1,MAN,2,true,opponent
+4373,Khem,Birch,Center,ARI,Aris Thessaloniki,12.5,0,0,false,1,MSB,1,true,opponent
+4543,Trey,Woodbury,Guard,JLB,Cosea JL Bourg-en-Bresse,10,0,0,false,1,NAP,2,true,opponent
+4555,Gabrielius,Maldunas,Center,LIE,Lietkabelis Panevezys,7.8,0,0,false,1,BOS,2,true,opponent
+4674,Skylar,Mays,Guard,BUD,Buducnost VOLI Podgorica,9.6,0,0,false,1,WKS,2,true,opponent
+4689,Niccolo,Mannion,Guard,ROM,Roma Basketball,12.4,0,0,false,1,BKS,2,true,opponent
+4753,Kenan,Sipahi,Guard,BKS,Bahcesehir College Istanbul,7.2,0,0,false,1,ROM,2,true,opponent
+7200,Jeff,Dowtin Jr.,Guard,NAP,Napoli Basketball,11,0,0,false,1,JLB,2,true,opponent
+7205,Vlatko,Cancar,Forward,BUR,Recoletas Salud San Pablo Burgos,11.4,0,0,false,1,COL,2,true,opponent
+7211,Zac,Seljaas,Forward,NAP,Napoli Basketball,12.4,0,0,false,1,JLB,2,true,opponent
+7222,Ismael,Bako,Center,TTA,Turk Telekom Ankara,12.2,0,0,false,1,LLT,2,true,opponent
+7224,Armel,Traore,Forward,ULM,Ratiopharm Ulm,10,0,0,false,1,BLK,2,true,opponent
+7227,Aleksa,Avramovic,Guard,BKS,Bahcesehir College Istanbul,9.5,0,0,false,1,ROM,2,true,opponent
+7233,Uros,Trifunovic,Forward,TTA,Turk Telekom Ankara,7.9,0,0,false,1,LLT,2,true,opponent
+7240,Danilo,Andjusic,Forward,ARI,Aris Thessaloniki,9.8,0,0,false,1,MSB,1,true,opponent
+7244,Rafa,Villar,Guard,MAN,Kids&Us Manresa,6.5,0,0,false,1,PBC,2,true,opponent
+7260,Malachi,Flynn,Guard,BKS,Bahcesehir College Istanbul,15.5,0,0,false,1,ROM,2,true,opponent
+7263,Dusan,Miletic,Center,JLM,Hapoel Midtown Jerusalem,14,0,0,false,1,ROS,1,true,opponent
+7267,Kris,Bankston,Center,TTA,Turk Telekom Ankara,11,0,0,false,1,LLT,2,true,opponent
+7270,Bryce,Jones,Guard,TOF,Tofas Bursa,15.3,0,0,false,1,CHE,1,true,opponent
+7271,Joel,Scott,Forward,LDN,London Lions,12.6,0,0,false,1,SIA,2,true,opponent
+7274,Ky,Bowman,Guard,URV,Umana Reyer Venice,9.6,0,0,false,1,SKY,1,true,opponent
+7276,Michael,Devoe,Guard,TTA,Turk Telekom Ankara,10.4,0,0,false,1,LLT,2,true,opponent
+7278,Mitchell,Creek,Forward,UBT,U-BT Cluj-Napoca,15.5,0,0,false,1,RMA,2,true,opponent
+7279,Thomas,Kennedy,Center,LDN,London Lions,10.3,0,0,false,1,SIA,2,true,opponent
+7283,Iverson,Molinar,Guard,BUD,Buducnost VOLI Podgorica,10.4,0,0,false,1,WKS,2,true,opponent
+7284,Jerry,Boutsiele,Center,BUD,Buducnost VOLI Podgorica,9.9,0,0,false,1,WKS,2,true,opponent
+7287,Elija,Mitrou-Long,Guard,ARI,Aris Thessaloniki,10.3,0,0,false,1,MSB,1,true,opponent
+7288,Retin,Obasohan,Guard,BUR,Recoletas Salud San Pablo Burgos,11,0,0,false,1,COL,2,true,opponent
+7289,Dj,Steward,Guard,BUR,Recoletas Salud San Pablo Burgos,11.7,0,0,false,1,COL,2,true,opponent
+7295,Shavar,Reynolds,Guard,TOF,Tofas Bursa,11.4,0,0,false,1,CHE,1,true,opponent
+7297,Issuf,Sanon,Guard,WKS,Slask Wroclaw,9.3,0,0,false,1,BUD,2,true,opponent
+7299,Stefan,Djordjevic,Center,BUD,Buducnost VOLI Podgorica,12,0,0,false,1,WKS,2,true,opponent
+7300,Kadre,Gray,Guard,WKS,Slask Wroclaw,13.2,0,0,false,1,BUD,2,true,opponent
+7302,Donatas,Tarolis,Forward,NEP,Neptunas Klaipeda,11.3,0,0,false,1,TRE,1,true,opponent
+7304,Harrison,Cleary,Guard,NEP,Neptunas Klaipeda,5.9,0,0,false,1,TRE,1,true,opponent
+7305,James,Thompson,Center,BUD,Buducnost VOLI Podgorica,6,0,0,false,1,WKS,2,true,opponent
+7311,Martynas,Pacevicius,Center,SIA,Siauliai Basketball,7.7,0,0,false,1,LDN,2,true,opponent
+7314,Chris,Sengfelder,Center,BUR,Recoletas Salud San Pablo Burgos,10.5,0,0,false,1,COL,2,true,opponent
+7318,Carlos,Stewart,Guard,MSB,Le Mans Sarthe Basket,9.8,0,0,false,1,ARI,1,true,opponent
+7319,Ethan,Price,Forward,LDN,London Lions,7.9,0,0,false,1,SIA,2,true,opponent
+7320,Yordan,Minchev,Forward,MAN,Kids&Us Manresa,9.6,0,0,false,1,PBC,2,true,opponent
+7323,Nikos,Chougkaz,Forward,PBC,PAOK Thessaloniki,8.3,0,0,false,1,MAN,2,true,opponent
+7325,Ronnie,Harrell,Forward,ARI,Aris Thessaloniki,8.9,0,0,false,1,MSB,1,true,opponent
+7327,Kaza,Kajami-keane,Guard,CHE,NINERS Chemnitz,6.8,0,0,false,1,TOF,1,true,opponent
+7339,Josiah-jordan,James,Forward,JLM,Hapoel Midtown Jerusalem,6.5,0,0,false,1,ROS,1,true,opponent
+7340,Aaryn,Rai,Forward,LDN,London Lions,7.8,0,0,false,1,SIA,2,true,opponent
+7342,Diego,Ocampo,Head Coach,MAN,Kids&Us Manresa,8,0,0,false,1,PBC,2,true,opponent
+7348,Deane,Williams,Forward,LDN,London Lions,8.5,0,0,false,1,SIA,2,true,opponent
+7349,Noah,Kirkwood,Forward,COL,Cedevita Olimpija Ljubljana,10.2,0,0,false,1,BUR,2,true,opponent
+7354,Jakub,Niziol,Forward,WKS,Slask Wroclaw,9.7,0,0,false,1,BUD,2,true,opponent
+7355,Miha,Cerkvenik,Forward,COL,Cedevita Olimpija Ljubljana,5,0,0,false,1,BUR,2,true,opponent
+7360,David,Skara,Forward,COL,Cedevita Olimpija Ljubljana,8.3,0,0,false,1,BUR,2,true,opponent
+7361,Tautvydas,Sabonis,Head Coach,LDN,London Lions,7,0,0,false,1,SIA,2,true,opponent
+7364,Andrej,Jakimovski,Forward,NAP,Napoli Basketball,9.2,0,0,false,1,JLB,2,true,opponent
+7371,Kostja,Mushidi,Forward,CHE,NINERS Chemnitz,5.7,0,0,false,1,TOF,1,true,opponent
+7374,Arnas,Berucka,Guard,NEP,Neptunas Klaipeda,5.6,0,0,false,1,TRE,1,true,opponent
+7375,Meissa,Faye,Forward,ULM,Ratiopharm Ulm,4.1,0,0,false,1,BLK,2,true,opponent
+7379,Ben,Altit,Center,UBT,U-BT Cluj-Napoca,4,0,0,false,1,RMA,2,true,opponent
+7380,Rodrigue,Pastore,Head Coach,CHE,NINERS Chemnitz,6.5,0,0,false,1,TOF,1,true,opponent
+7382,Mindaugas,Girdziunas,Guard,NEP,Neptunas Klaipeda,6.5,0,0,false,1,TRE,1,true,opponent
+7383,Tymoteusz,Sternicki,Forward,WKS,Slask Wroclaw,4.1,0,0,false,1,BUD,2,true,opponent
+7384,Leonardo,Candi,Guard,URV,Umana Reyer Venice,6,0,0,false,1,SKY,1,true,opponent
+7385,Antony,Labanca,Guard,JLB,Cosea JL Bourg-en-Bresse,4.1,0,0,false,1,NAP,2,true,opponent
+7388,Gediminas,Petrauskas,Head Coach,NEP,Neptunas Klaipeda,5,0,0,false,1,TRE,1,true,opponent
+7391,Giovanni,De Nicolao,Guard,URV,Umana Reyer Venice,4,0,0,false,1,SKY,1,true,opponent
+7394,Mo,Soluade,Guard,LDN,London Lions,4.5,0,0,false,1,SIA,2,true,opponent
+7399,Aleksander,Wisniewski,Guard,WKS,Slask Wroclaw,4,0,0,false,1,BUD,2,true,opponent
+7400,Theo,Airhienbuwa,Forward,TRE,Dolomiti Energia Trento,5,0,0,false,1,NEP,1,true,opponent
+7403,Nojus,Kuliesa,Guard,LIE,Lietkabelis Panevezys,4,0,0,false,1,BOS,2,true,opponent
+7407,Cameron,Houindo,Center,COL,Cedevita Olimpija Ljubljana,5,0,0,false,1,BUR,2,true,opponent
+7408,Ata,Kahraman,Guard,TTA,Turk Telekom Ankara,4.2,0,0,false,1,LLT,2,true,opponent
+8367,Glynn,Watson,Guard,URV,Umana Reyer Venice,13,0,0,false,1,SKY,1,true,opponent
+8568,Leonardo,Tote,Center,NAP,Napoli Basketball,10,0,0,false,1,JLB,2,true,opponent
+8627,Adam,Atamna,Guard,ULM,Ratiopharm Ulm,7.5,0,0,false,1,BLK,2,true,opponent
+8635,Nojus,Radzius,Guard,LIE,Lietkabelis Panevezys,5.5,0,0,false,1,BOS,2,true,opponent
+8637,Emircan,Kosut,Center,TTA,Turk Telekom Ankara,4.2,0,0,false,1,LLT,2,true,opponent
+8638,Roman,Bedime,Forward,SKY,Skyliners Frankfurt,5,0,0,false,1,URV,1,true,opponent
+8639,Rihards,Lomazs,Guard,NEP,Neptunas Klaipeda,13.8,0,0,false,1,TRE,1,true,opponent
+8640,Matas,Macijauskas,Center,NEP,Neptunas Klaipeda,4,0,0,false,1,TRE,1,true,opponent
+8641,Karolis,Lukosiunas,Guard,SIA,Siauliai Basketball,6.2,0,0,false,1,LDN,2,true,opponent
+8642,Clifford,Omoruyi,Center,PBC,PAOK Thessaloniki,8.7,0,0,false,1,MAN,2,true,opponent
+8707,Saulius,Kulvietis,Forward,UBT,U-BT Cluj-Napoca,5,0,0,false,1,RMA,2,true,opponent
+8717,Zoran,Nikolic,Center,BUD,Buducnost VOLI Podgorica,4,0,0,false,1,WKS,2,true,opponent
+8744,Teo,Milicic,Guard,ULM,Ratiopharm Ulm,4.2,0,0,false,1,BLK,2,true,opponent
+8745,Aurimas,Majauskas,Forward,NEP,Neptunas Klaipeda,7,0,0,false,1,TRE,1,true,opponent
+8758,Pierre,Oriola,Center,MAN,Kids&Us Manresa,9.7,0,0,false,1,PBC,2,true,opponent
+8760,Angel,Nunez,Forward,WKS,Slask Wroclaw,7.5,0,0,false,1,BUD,2,true,opponent
+8778,Nighael,Ceaser,Center,CHE,NINERS Chemnitz,12.6,0,0,false,1,TOF,1,true,opponent
+8810,Ferran,Bassas,Guard,MAN,Kids&Us Manresa,7.6,0,0,false,1,PBC,2,true,opponent
+8833,Paul,Eboua,Center,DER,Baglietto Derthona Tortona,8,0,0,false,1,RIG,1,true,opponent
+8878,Matthew,Hurt,Forward,COL,Cedevita Olimpija Ljubljana,9,0,0,false,1,BUR,2,true,opponent
+11174,Jeremiah,Robinson-earl,Forward,ARI,Aris Thessaloniki,13.6,0,0,false,1,MSB,1,true,opponent
+11175,E.j.,Liddell,Forward,ARI,Aris Thessaloniki,12.8,0,0,false,1,MSB,1,true,opponent
+11176,Vasilis,Charalampopoulos,Forward,ARI,Aris Thessaloniki,5.8,0,0,false,1,MSB,1,true,opponent
+11177,Elefterios,Bochoridis,Forward,ARI,Aris Thessaloniki,5.2,0,0,false,1,MSB,1,true,opponent
+11178,Giorgos,Tanoulis,Center,ARI,Aris Thessaloniki,4.5,0,0,false,1,MSB,1,true,opponent
+11179,Stylianos,Poulianitis,Guard,ARI,Aris Thessaloniki,4.2,0,0,false,1,MSB,1,true,opponent
+11180,Chrysostomos,Chatzilamprou,Guard,ARI,Aris Thessaloniki,4,0,0,false,1,MSB,1,true,opponent
+11181,Ryan,Hawkins,Forward,BOS,Bosna BH Telecom Sarajevo,9.3,0,0,false,1,LIE,2,true,opponent
+11182,Marcus,Domask,Forward,BOS,Bosna BH Telecom Sarajevo,7.8,0,0,false,1,LIE,2,true,opponent
+11183,Alija,Islamovic,Center,BOS,Bosna BH Telecom Sarajevo,5.8,0,0,false,1,LIE,2,true,opponent
+11184,James,Banks,Center,BOS,Bosna BH Telecom Sarajevo,8,0,0,false,1,LIE,2,true,opponent
+11185,Deandre,Gholston,Guard,BOS,Bosna BH Telecom Sarajevo,8.4,0,0,false,1,LIE,2,true,opponent
+11186,Nikola,Popovic,Forward,BOS,Bosna BH Telecom Sarajevo,8.8,0,0,false,1,LIE,2,true,opponent
+11187,Darko,Talic,Guard,BOS,Bosna BH Telecom Sarajevo,8.9,0,0,false,1,LIE,2,true,opponent
+11188,Adin,Mandzukic,Guard,BOS,Bosna BH Telecom Sarajevo,4.4,0,0,false,1,LIE,2,true,opponent
+11189,Dante,Maddox,Guard,DER,Baglietto Derthona Tortona,11.9,0,0,false,1,RIG,1,true,opponent
+11190,Prentiss,Hubb,Guard,DER,Baglietto Derthona Tortona,11.1,0,0,false,1,RIG,1,true,opponent
+11191,Dominik,Olejniczak,Center,DER,Baglietto Derthona Tortona,10.8,0,0,false,1,RIG,1,true,opponent
+11192,Aljami,Durham,Guard,DER,Baglietto Derthona Tortona,10.7,0,0,false,1,RIG,1,true,opponent
+11193,Justin,Gorham,Forward,DER,Baglietto Derthona Tortona,9.6,0,0,false,1,RIG,1,true,opponent
+11194,Giordano,Bortolani,Guard,DER,Baglietto Derthona Tortona,8.5,0,0,false,1,RIG,1,true,opponent
+11195,Mario,Fioretti,Head Coach,DER,Baglietto Derthona Tortona,6.5,0,0,false,1,RIG,1,true,opponent
+11196,Andrea,Pecchia,Guard,DER,Baglietto Derthona Tortona,5.8,0,0,false,1,RIG,1,true,opponent
+11197,Edoardo,Di Meo,Guard,DER,Baglietto Derthona Tortona,4,0,0,false,1,RIG,1,true,opponent
+11198,Giulio,Gazzotti,Forward,DER,Baglietto Derthona Tortona,4,0,0,false,1,RIG,1,true,opponent
+11199,Marcquise,Reed,Guard,BKS,Bahcesehir College Istanbul,12.2,0,0,false,1,ROM,2,true,opponent
+11200,Damien,Inglis,Forward,BKS,Bahcesehir College Istanbul,9,0,0,false,1,ROM,2,true,opponent
+11201,David,Dileo,Forward,BKS,Bahcesehir College Istanbul,8.3,0,0,false,1,ROM,2,true,opponent
+11202,Maxim,Mutaf,Forward,BKS,Bahcesehir College Istanbul,7,0,0,false,1,ROM,2,true,opponent
+11203,Demond,Robinson,Forward,BLK,Balkan Botevgrad,11.4,0,0,false,1,ULM,2,true,opponent
+11204,Taj,Green,Forward,BLK,Balkan Botevgrad,10.6,0,0,false,1,ULM,2,true,opponent
+11205,Darnelle,Edge,Guard,BLK,Balkan Botevgrad,10.3,0,0,false,1,ULM,2,true,opponent
+11206,Javante,Mccoy,Guard,BLK,Balkan Botevgrad,10,0,0,false,1,ULM,2,true,opponent
+11207,Travis,Mcconico,Forward,BLK,Balkan Botevgrad,9.4,0,0,false,1,ULM,2,true,opponent
+11208,Konstantin,Toshkov,Guard,BLK,Balkan Botevgrad,9,0,0,false,1,ULM,2,true,opponent
+11209,Dimitar,Dimitrov,Forward,BLK,Balkan Botevgrad,8.6,0,0,false,1,ULM,2,true,opponent
+11210,Ulrich,Chomche,Center,BLK,Balkan Botevgrad,8.2,0,0,false,1,ULM,2,true,opponent
+11211,Jamari,Blackmon,Guard,BLK,Balkan Botevgrad,8.1,0,0,false,1,ULM,2,true,opponent
+11212,Gael,Bonilla,Forward,BLK,Balkan Botevgrad,8,0,0,false,1,ULM,2,true,opponent
+11213,Aleksandar,Stoimenov,Guard,BLK,Balkan Botevgrad,7.8,0,0,false,1,ULM,2,true,opponent
+11214,David,Okwera,Center,BLK,Balkan Botevgrad,7.7,0,0,false,1,ULM,2,true,opponent
+11215,Alex,Ducas,Guard,BLK,Balkan Botevgrad,7.5,0,0,false,1,ULM,2,true,opponent
+11216,Ivan,Alipiev,Forward,BLK,Balkan Botevgrad,7.4,0,0,false,1,ULM,2,true,opponent
+11217,Alex,Simeonov,Forward,BLK,Balkan Botevgrad,6.8,0,0,false,1,ULM,2,true,opponent
+11218,Andrey,Ivanov,Center,BLK,Balkan Botevgrad,6.7,0,0,false,1,ULM,2,true,opponent
+11219,Nikolay,Grozev,Forward,BLK,Balkan Botevgrad,6,0,0,false,1,ULM,2,true,opponent
+11220,Bogdan,Karaicic,Head Coach,BLK,Balkan Botevgrad,5,0,0,false,1,ULM,2,true,opponent
+11221,Marial,Shayok,Forward,BUD,Buducnost VOLI Podgorica,9.9,0,0,false,1,WKS,2,true,opponent
+11222,Emir,Hadzibegovic,Forward,BUD,Buducnost VOLI Podgorica,6.5,0,0,false,1,WKS,2,true,opponent
+11223,Dordije,Jovanovic,Forward,BUD,Buducnost VOLI Podgorica,4.8,0,0,false,1,WKS,2,true,opponent
+11224,Oleksandr,Kovliar,Guard,BUD,Buducnost VOLI Podgorica,4.7,0,0,false,1,WKS,2,true,opponent
+11225,Anthony,Cowan,Guard,COL,Cedevita Olimpija Ljubljana,13,0,0,false,1,BUR,2,true,opponent
+11226,Jayce,Johnson,Center,COL,Cedevita Olimpija Ljubljana,9.8,0,0,false,1,BUR,2,true,opponent
+11227,Brandon,Murray,Guard,COL,Cedevita Olimpija Ljubljana,9.6,0,0,false,1,BUR,2,true,opponent
+11228,Jordan,Gainey,Guard,COL,Cedevita Olimpija Ljubljana,9,0,0,false,1,BUR,2,true,opponent
+11229,Tyson,Walker,Guard,JLB,Cosea JL Bourg-en-Bresse,10.3,0,0,false,1,NAP,2,true,opponent
+11230,Lionel,Gaudoux,Forward,JLB,Cosea JL Bourg-en-Bresse,9.7,0,0,false,1,NAP,2,true,opponent
+11231,Tyrese,Samuel,Forward,JLB,Cosea JL Bourg-en-Bresse,9.5,0,0,false,1,NAP,2,true,opponent
+11232,Keith,Jordan,Forward,JLB,Cosea JL Bourg-en-Bresse,9.4,0,0,false,1,NAP,2,true,opponent
+11233,Hugo,Robineau,Guard,JLB,Cosea JL Bourg-en-Bresse,8.8,0,0,false,1,NAP,2,true,opponent
+11234,Kadin,Shedrick,Center,JLB,Cosea JL Bourg-en-Bresse,8.7,0,0,false,1,NAP,2,true,opponent
+11235,Assémian,Moulare,Guard,JLB,Cosea JL Bourg-en-Bresse,8,0,0,false,1,NAP,2,true,opponent
+11236,Nathan,Soliman,Forward,JLB,Cosea JL Bourg-en-Bresse,5,0,0,false,1,NAP,2,true,opponent
+11237,Darius,Brown Ii,Guard,TRE,Dolomiti Energia Trento,12,0,0,false,1,NEP,1,true,opponent
+11238,Charlie,Brown Jr,Forward,TRE,Dolomiti Energia Trento,10.7,0,0,false,1,NEP,1,true,opponent
+11239,Quincy,Olivari,Guard,TRE,Dolomiti Energia Trento,10.2,0,0,false,1,NEP,1,true,opponent
+11240,Isaiah,Bigelow,Forward,TRE,Dolomiti Energia Trento,9.5,0,0,false,1,NEP,1,true,opponent
+11241,Alessandro,Bertini,Guard,TRE,Dolomiti Energia Trento,6.4,0,0,false,1,NEP,1,true,opponent
+11242,Cheikh,Niang,Guard,TRE,Dolomiti Energia Trento,5.5,0,0,false,1,NEP,1,true,opponent
+11243,Federico,Cattapan,Guard,TRE,Dolomiti Energia Trento,4,0,0,false,1,NEP,1,true,opponent
+11244,Kenny,Lofton Jr,Forward,JLM,Hapoel Midtown Jerusalem,13.2,0,0,false,1,ROS,1,true,opponent
+11245,David,Roddy,Forward,JLM,Hapoel Midtown Jerusalem,13,0,0,false,1,ROS,1,true,opponent
+11246,Shake,Milton,Guard,JLM,Hapoel Midtown Jerusalem,12.5,0,0,false,1,ROS,1,true,opponent
+11247,Devontae,Cacok,Center,JLM,Hapoel Midtown Jerusalem,11.8,0,0,false,1,ROS,1,true,opponent
+11248,Ethan,Burg,Guard,JLM,Hapoel Midtown Jerusalem,7,0,0,false,1,ROS,1,true,opponent
+11249,Roi,Huber,Guard,JLM,Hapoel Midtown Jerusalem,4,0,0,false,1,ROS,1,true,opponent
+11250,Nick,Ogenda,Center,MAN,Kids&Us Manresa,12.2,0,0,false,1,PBC,2,true,opponent
+11251,Colby,Jones,Guard,MAN,Kids&Us Manresa,11.9,0,0,false,1,PBC,2,true,opponent
+11252,Timmy,Allen,Forward,MAN,Kids&Us Manresa,9.7,0,0,false,1,PBC,2,true,opponent
+11253,Jd,Notae,Guard,MAN,Kids&Us Manresa,9.5,0,0,false,1,PBC,2,true,opponent
+11254,Lukasz,Kolenda,Guard,MAN,Kids&Us Manresa,8.3,0,0,false,1,PBC,2,true,opponent
+11255,Chibuzo,Agbo,Forward,MAN,Kids&Us Manresa,8.2,0,0,false,1,PBC,2,true,opponent
+11256,Pablo,Tamba,Forward,MAN,Kids&Us Manresa,6.8,0,0,false,1,PBC,2,true,opponent
+11257,Lucas,Beaufort,Guard,MAN,Kids&Us Manresa,6.3,0,0,false,1,PBC,2,true,opponent
+11258,Eric,Vila,Forward,MAN,Kids&Us Manresa,4.6,0,0,false,1,PBC,2,true,opponent
+11259,Giorgi,Shermadini,Center,LLT,La Laguna Tenerife,12,0,0,false,1,TTA,2,true,opponent
+11260,Marcelinho,Huertas,Guard,LLT,La Laguna Tenerife,11.4,0,0,false,1,TTA,2,true,opponent
+11261,Kyle,Guy,Guard,LLT,La Laguna Tenerife,10.5,0,0,false,1,TTA,2,true,opponent
+11262,Vince,Hunter,Center,LLT,La Laguna Tenerife,10.1,0,0,false,1,TTA,2,true,opponent
+11263,Jaka,Lakovic,Head Coach,LLT,La Laguna Tenerife,9.5,0,0,false,1,TTA,2,true,opponent
+11264,Jaime,Fernandez,Guard,LLT,La Laguna Tenerife,8.5,0,0,false,1,TTA,2,true,opponent
+11265,Tj,Bamba,Guard,LLT,La Laguna Tenerife,8.5,0,0,false,1,TTA,2,true,opponent
+11266,Rokas,Giedraitis,Forward,LLT,La Laguna Tenerife,8.2,0,0,false,1,TTA,2,true,opponent
+11267,Fran,Guerra,Center,LLT,La Laguna Tenerife,7.8,0,0,false,1,TTA,2,true,opponent
+11268,Tim,Abromaitis,Forward,LLT,La Laguna Tenerife,7.7,0,0,false,1,TTA,2,true,opponent
+11269,Wesley,Van Beck,Guard,LLT,La Laguna Tenerife,7.6,0,0,false,1,TTA,2,true,opponent
+11270,Bruno,Fitipaldo,Guard,LLT,La Laguna Tenerife,7.5,0,0,false,1,TTA,2,true,opponent
+11271,Arturs,Kurucks,Guard,LLT,La Laguna Tenerife,7.3,0,0,false,1,TTA,2,true,opponent
+11272,Aaron,Doornekamp,Forward,LLT,La Laguna Tenerife,7.1,0,0,false,1,TTA,2,true,opponent
+11273,Joan,Sastre,Guard,LLT,La Laguna Tenerife,5,0,0,false,1,TTA,2,true,opponent
+11274,Hector,Alderete,Forward,LLT,La Laguna Tenerife,4.1,0,0,false,1,TTA,2,true,opponent
+11275,Tashawn,Thomas,Forward,MSB,Le Mans Sarthe Basket,10,0,0,false,1,ARI,1,true,opponent
+11276,Lucas,Dufeal,Forward,MSB,Le Mans Sarthe Basket,9.6,0,0,false,1,ARI,1,true,opponent
+11277,Jordan,King,Guard,MSB,Le Mans Sarthe Basket,9.3,0,0,false,1,ARI,1,true,opponent
+11278,Leopold,Delaunay,Guard,MSB,Le Mans Sarthe Basket,8.8,0,0,false,1,ARI,1,true,opponent
+11279,Wilfried,Yeguete,Center,MSB,Le Mans Sarthe Basket,8.5,0,0,false,1,ARI,1,true,opponent
+11280,Moses,Wood,Forward,MSB,Le Mans Sarthe Basket,8,0,0,false,1,ARI,1,true,opponent
+11281,Guillaume,Vizade,Head Coach,MSB,Le Mans Sarthe Basket,7,0,0,false,1,ARI,1,true,opponent
+11282,Bastien,Grasshof,Guard,MSB,Le Mans Sarthe Basket,6,0,0,false,1,ARI,1,true,opponent
+11283,Ugo,Doumbia,Guard,MSB,Le Mans Sarthe Basket,5.6,0,0,false,1,ARI,1,true,opponent
+11284,Swann,Penda,Forward,MSB,Le Mans Sarthe Basket,4.2,0,0,false,1,ARI,1,true,opponent
+11285,Ivan,Fevrier,Forward,LIE,Lietkabelis Panevezys,9.9,0,0,false,1,BOS,2,true,opponent
+11286,Keondre,Kennedy,Forward,LIE,Lietkabelis Panevezys,9.5,0,0,false,1,BOS,2,true,opponent
+11287,Ognjen,Jaramaz,Guard,LIE,Lietkabelis Panevezys,9,0,0,false,1,BOS,2,true,opponent
+11288,Marius,Valinskas,Guard,LIE,Lietkabelis Panevezys,8.9,0,0,false,1,BOS,2,true,opponent
+11289,Milos,Ilic,Center,LIE,Lietkabelis Panevezys,8.5,0,0,false,1,BOS,2,true,opponent
+11290,Warren,Washington,Center,LIE,Lietkabelis Panevezys,8.4,0,0,false,1,BOS,2,true,opponent
+11291,Alexander,Schumacher,Guard,LIE,Lietkabelis Panevezys,8.2,0,0,false,1,BOS,2,true,opponent
+11292,Veljko,Ilic,Center,LIE,Lietkabelis Panevezys,7.8,0,0,false,1,BOS,2,true,opponent
+11293,Nikola,Radicevic,Guard,LIE,Lietkabelis Panevezys,6.3,0,0,false,1,BOS,2,true,opponent
+11294,Gytis,Nemeiksa,Forward,LIE,Lietkabelis Panevezys,6,0,0,false,1,BOS,2,true,opponent
+11295,Tomas,Zdanavicius,Center,LIE,Lietkabelis Panevezys,5.7,0,0,false,1,BOS,2,true,opponent
+11296,Zygimantas,Simonis,Guard,LIE,Lietkabelis Panevezys,5.5,0,0,false,1,BOS,2,true,opponent
+11297,Daniel,Baslyk,Forward,LIE,Lietkabelis Panevezys,5,0,0,false,1,BOS,2,true,opponent
+11298,Keenan,Evans,Guard,LDN,London Lions,12.2,0,0,false,1,SIA,2,true,opponent
+11299,Landrius,Horton,Guard,LDN,London Lions,12,0,0,false,1,SIA,2,true,opponent
+11300,Maxwell,Lewis,Forward,LDN,London Lions,9.7,0,0,false,1,SIA,2,true,opponent
+11301,Joshua,O'garro,Guard,LDN,London Lions,7,0,0,false,1,SIA,2,true,opponent
+11302,Matt,Goodwin,Guard,LDN,London Lions,4.1,0,0,false,1,SIA,2,true,opponent
+11303,Emilis,Zibuda,Guard,LDN,London Lions,4,0,0,false,1,SIA,2,true,opponent
+11304,Miro,Bilan,Center,RMA,Maxima Roma,14,0,0,false,1,UBT,2,true,opponent
+11305,Xavier,Moon,Guard,RMA,Maxima Roma,12.4,0,0,false,1,UBT,2,true,opponent
+11306,Aaron,Holiday,Guard,RMA,Maxima Roma,11.9,0,0,false,1,UBT,2,true,opponent
+11307,Vernon,Carey Jr,Center,RMA,Maxima Roma,11.8,0,0,false,1,UBT,2,true,opponent
+11308,Matt,Ryan,Forward,RMA,Maxima Roma,11.5,0,0,false,1,UBT,2,true,opponent
+11309,John,Brown Iii,Forward,RMA,Maxima Roma,10,0,0,false,1,UBT,2,true,opponent
+11310,Matteo,Cotelli,Head Coach,RMA,Maxima Roma,7.5,0,0,false,1,UBT,2,true,opponent
+11311,Mirza,Alibegovic,Guard,RMA,Maxima Roma,7.2,0,0,false,1,UBT,2,true,opponent
+11312,Gora,Camara,Center,RMA,Maxima Roma,6,0,0,false,1,UBT,2,true,opponent
+11313,Giovanni,Veronesi,Forward,RMA,Maxima Roma,5.3,0,0,false,1,UBT,2,true,opponent
+11314,Federico,Bonacini,Guard,RMA,Maxima Roma,4.5,0,0,false,1,UBT,2,true,opponent
+11315,Jahmi'us,Ramsey,Guard,NAP,Napoli Basketball,12.3,0,0,false,1,JLB,2,true,opponent
+11316,Jackson,White,Forward,NAP,Napoli Basketball,10.4,0,0,false,1,JLB,2,true,opponent
+11317,Marco,Spissu,Guard,NAP,Napoli Basketball,10.3,0,0,false,1,JLB,2,true,opponent
+11318,John,Petrucelli,Guard,NAP,Napoli Basketball,9.7,0,0,false,1,JLB,2,true,opponent
+11319,Jasmin,Repesa,Head Coach,NAP,Napoli Basketball,8.5,0,0,false,1,JLB,2,true,opponent
+11320,Guglielmo,Caruso,Center,NAP,Napoli Basketball,7.3,0,0,false,1,JLB,2,true,opponent
+11321,Assane,Sankare,Forward,NAP,Napoli Basketball,4.2,0,0,false,1,JLB,2,true,opponent
+11322,Leonardo,Faggian,Guard,NAP,Napoli Basketball,4.1,0,0,false,1,JLB,2,true,opponent
+11323,Einaras,Tubutis,Forward,NEP,Neptunas Klaipeda,10.3,0,0,false,1,TRE,1,true,opponent
+11324,Martynas,Echodas,Center,NEP,Neptunas Klaipeda,10,0,0,false,1,TRE,1,true,opponent
+11325,Yannick,Franke,Guard,NEP,Neptunas Klaipeda,9.8,0,0,false,1,TRE,1,true,opponent
+11326,Elvar,Fridriksson,Guard,NEP,Neptunas Klaipeda,9.6,0,0,false,1,TRE,1,true,opponent
+11327,Lukas,Kreismontas,Forward,NEP,Neptunas Klaipeda,9.5,0,0,false,1,TRE,1,true,opponent
+11328,Henri,Drell,Forward,NEP,Neptunas Klaipeda,7.5,0,0,false,1,TRE,1,true,opponent
+11329,Kristupas,Zemaitis,Guard,NEP,Neptunas Klaipeda,7,0,0,false,1,TRE,1,true,opponent
+11330,Raymond,Sommerville,Center,NEP,Neptunas Klaipeda,6.5,0,0,false,1,TRE,1,true,opponent
+11331,Phlandrous,Fleming,Guard,CHE,NINERS Chemnitz,11.3,0,0,false,1,TOF,1,true,opponent
+11332,Cobe,Williams,Guard,CHE,NINERS Chemnitz,10.9,0,0,false,1,TOF,1,true,opponent
+11333,Darion,Atkins,Center,CHE,NINERS Chemnitz,9.7,0,0,false,1,TOF,1,true,opponent
+11334,Stefan,Smith,Guard,CHE,NINERS Chemnitz,9.6,0,0,false,1,TOF,1,true,opponent
+11335,Ben,Burnham,Forward,CHE,NINERS Chemnitz,9,0,0,false,1,TOF,1,true,opponent
+11336,Urald,King,Forward,CHE,NINERS Chemnitz,9,0,0,false,1,TOF,1,true,opponent
+11337,Jannis,Von Seckendorff,Forward,CHE,NINERS Chemnitz,8.4,0,0,false,1,TOF,1,true,opponent
+11338,Alexander,Richardson,Center,CHE,NINERS Chemnitz,8,0,0,false,1,TOF,1,true,opponent
+11339,Elias,Rodl,Forward,CHE,NINERS Chemnitz,5,0,0,false,1,TOF,1,true,opponent
+11340,Yohan,Choupas,Guard,CHE,NINERS Chemnitz,5.6,0,0,false,1,TOF,1,true,opponent
+11341,Mateo,Seric,Forward,CHE,NINERS Chemnitz,5.3,0,0,false,1,TOF,1,true,opponent
+11342,Ben,Moore,Forward,PBC,PAOK Thessaloniki,12.3,0,0,false,1,MAN,2,true,opponent
+11343,Marcus,Foster,Guard,PBC,PAOK Thessaloniki,12,0,0,false,1,MAN,2,true,opponent
+11344,Trevor,Hudgins,Guard,PBC,PAOK Thessaloniki,11.8,0,0,false,1,MAN,2,true,opponent
+11345,Raiquan,Gray,Forward,PBC,PAOK Thessaloniki,11.3,0,0,false,1,MAN,2,true,opponent
+11346,Breein,Tyree,Guard,PBC,PAOK Thessaloniki,10.7,0,0,false,1,MAN,2,true,opponent
+11347,Andrea,Trinchieri,Head Coach,PBC,PAOK Thessaloniki,10,0,0,false,1,MAN,2,true,opponent
+11348,Naz,Mitrou-long,Guard,PBC,PAOK Thessaloniki,9.2,0,0,false,1,MAN,2,true,opponent
+11349,Tomas,Dimsa,Forward,PBC,PAOK Thessaloniki,9,0,0,false,1,MAN,2,true,opponent
+11350,Nikos,Persidis,Guard,PBC,PAOK Thessaloniki,6,0,0,false,1,MAN,2,true,opponent
+11351,Dimitris,Kaklamanakis,Center,PBC,PAOK Thessaloniki,5.5,0,0,false,1,MAN,2,true,opponent
+11352,Nasos,Bazinas,Guard,PBC,PAOK Thessaloniki,5,0,0,false,1,MAN,2,true,opponent
+11353,Jaylen,Sims,Guard,ULM,Ratiopharm Ulm,11.6,0,0,false,1,BLK,2,true,opponent
+11354,Oluwasimisola,Shittu,Center,ULM,Ratiopharm Ulm,11.3,0,0,false,1,BLK,2,true,opponent
+11355,Ibi,Watson,Forward,ULM,Ratiopharm Ulm,11,0,0,false,1,BLK,2,true,opponent
+11356,Michael,Rataj,Forward,ULM,Ratiopharm Ulm,7,0,0,false,1,BLK,2,true,opponent
+11357,Devin,Schmidt,Guard,ULM,Ratiopharm Ulm,6.4,0,0,false,1,BLK,2,true,opponent
+11358,Mohamed,Diakite,Forward,ULM,Ratiopharm Ulm,5.2,0,0,false,1,BLK,2,true,opponent
+11359,Dwayne,Koroma,Forward,ULM,Ratiopharm Ulm,4.5,0,0,false,1,BLK,2,true,opponent
+11360,Zoran,Milicic,Guard,ULM,Ratiopharm Ulm,4,0,0,false,1,BLK,2,true,opponent
+11361,Yanu,Slingerland,Forward,ULM,Ratiopharm Ulm,4,0,0,false,1,BLK,2,true,opponent
+11362,Namori,Omog,Guard,ULM,Ratiopharm Ulm,4,0,0,false,1,BLK,2,true,opponent
+11363,Nil,Failenschmid-clavera,Forward,ULM,Ratiopharm Ulm,4.6,0,0,false,1,BLK,2,true,opponent
+11364,Jhivvan,Jackson,Forward,BUR,Recoletas Salud San Pablo Burgos,11.2,0,0,false,1,COL,2,true,opponent
+11365,Raul,Neto,Guard,BUR,Recoletas Salud San Pablo Burgos,10.6,0,0,false,1,COL,2,true,opponent
+11366,Balsa,Koprivica,Center,BUR,Recoletas Salud San Pablo Burgos,9.2,0,0,false,1,COL,2,true,opponent
+11367,Chase,Audige,Guard,BUR,Recoletas Salud San Pablo Burgos,8,0,0,false,1,COL,2,true,opponent
+11368,Porfi,Fisac,Head Coach,BUR,Recoletas Salud San Pablo Burgos,7.5,0,0,false,1,COL,2,true,opponent
+11369,Ziga,Samar,Guard,BUR,Recoletas Salud San Pablo Burgos,7.3,0,0,false,1,COL,2,true,opponent
+11370,Daniel,Diez,Forward,BUR,Recoletas Salud San Pablo Burgos,6.7,0,0,false,1,COL,2,true,opponent
+11371,Dusan,Radosavljevic,Guard,BUR,Recoletas Salud San Pablo Burgos,5.8,0,0,false,1,COL,2,true,opponent
+11372,Raul,Lobaco,Guard,BUR,Recoletas Salud San Pablo Burgos,5,0,0,false,1,COL,2,true,opponent
+11373,Ruben,Guerrero,Center,BUR,Recoletas Salud San Pablo Burgos,5,0,0,false,1,COL,2,true,opponent
+11374,Pablo,Almazan,Forward,BUR,Recoletas Salud San Pablo Burgos,4.2,0,0,false,1,COL,2,true,opponent
+11375,Inaki,Ordonez,Forward,BUR,Recoletas Salud San Pablo Burgos,4,0,0,false,1,COL,2,true,opponent
+11376,Isaac,Johnson,Center,RIG,Riga Zelli,11,0,0,false,1,DER,1,true,opponent
+11377,Tony,Perkins,Guard,RIG,Riga Zelli,10.4,0,0,false,1,DER,1,true,opponent
+11378,Toms,Skuja,Guard,RIG,Riga Zelli,10.3,0,0,false,1,DER,1,true,opponent
+11379,Ben,Shungu,Guard,RIG,Riga Zelli,10,0,0,false,1,DER,1,true,opponent
+11380,Janis,Berzins,Forward,RIG,Riga Zelli,10,0,0,false,1,DER,1,true,opponent
+11381,Klavs,Cavars,Center,RIG,Riga Zelli,9.8,0,0,false,1,DER,1,true,opponent
+11382,Kristians,Feierbergs,Forward,RIG,Riga Zelli,9.7,0,0,false,1,DER,1,true,opponent
+11383,Tyler,Wahl,Center,RIG,Riga Zelli,9.5,0,0,false,1,DER,1,true,opponent
+11384,Gustavs,Kampuss,Guard,RIG,Riga Zelli,7.5,0,0,false,1,DER,1,true,opponent
+11385,Kristers,Kikusts,Forward,RIG,Riga Zelli,7.3,0,0,false,1,DER,1,true,opponent
+11386,Rolands,Sulcs,Guard,RIG,Riga Zelli,6,0,0,false,1,DER,1,true,opponent
+11387,Rokas,Kondratavicius,Head Coach,RIG,Riga Zelli,5,0,0,false,1,DER,1,true,opponent
+11388,Tomas,Talcis,Guard,RIG,Riga Zelli,4,0,0,false,1,DER,1,true,opponent
+11389,Gerald,Ayayi,Forward,ROM,Roma Basketball,11.6,0,0,false,1,BKS,2,true,opponent
+11390,Trentyn,Flowers,Guard,ROM,Roma Basketball,11.4,0,0,false,1,BKS,2,true,opponent
+11391,Corey,Davis,Guard,ROM,Roma Basketball,11.1,0,0,false,1,BKS,2,true,opponent
+11392,Arturs,Strautins,Forward,ROM,Roma Basketball,9.7,0,0,false,1,BKS,2,true,opponent
+11393,Paul,Watson,Forward,ROM,Roma Basketball,9,0,0,false,1,BKS,2,true,opponent
+11394,Erik,Stevenson,Guard,ROM,Roma Basketball,8.9,0,0,false,1,BKS,2,true,opponent
+11395,Marko,Simonovic,Center,ROM,Roma Basketball,8.8,0,0,false,1,BKS,2,true,opponent
+11396,Giovanni,Emejuru,Center,ROM,Roma Basketball,7.8,0,0,false,1,BKS,2,true,opponent
+11397,Alessandro,Magro,Head Coach,ROM,Roma Basketball,7,0,0,false,1,BKS,2,true,opponent
+11398,Andrea,Mezzanotte,Forward,ROM,Roma Basketball,5,0,0,false,1,BKS,2,true,opponent
+11399,Mike,Iuzzolino,Guard,ROM,Roma Basketball,4.3,0,0,false,1,BKS,2,true,opponent
+11400,Giannis,Odzebe,Guard,ROM,Roma Basketball,4,0,0,false,1,BKS,2,true,opponent
+11401,Tj,Crockett,Guard,ROS,Rostock Seawolves,11.2,0,0,false,1,JLM,1,true,opponent
+11402,Zach,Copeland,Guard,ROS,Rostock Seawolves,10.8,0,0,false,1,JLM,1,true,opponent
+11403,Todd,Withers,Forward,ROS,Rostock Seawolves,9.7,0,0,false,1,JLM,1,true,opponent
+11404,Johnathan,Stove,Guard,ROS,Rostock Seawolves,9.2,0,0,false,1,JLM,1,true,opponent
+11405,Owen,Klassen,Center,ROS,Rostock Seawolves,9.2,0,0,false,1,JLM,1,true,opponent
+11406,Deandre,Lansdowne,Guard,ROS,Rostock Seawolves,9,0,0,false,1,JLM,1,true,opponent
+11407,Artur,Konontsuk,Forward,ROS,Rostock Seawolves,8.9,0,0,false,1,JLM,1,true,opponent
+11408,Robin,Amaize,Forward,ROS,Rostock Seawolves,7.3,0,0,false,1,JLM,1,true,opponent
+11409,Bent,Leuchten,Center,ROS,Rostock Seawolves,7,0,0,false,1,JLM,1,true,opponent
+11410,Elias,Baggette,Guard,ROS,Rostock Seawolves,6.3,0,0,false,1,JLM,1,true,opponent
+11411,Przemyslaw,Frasunkiewicz,Head Coach,ROS,Rostock Seawolves,5.5,0,0,false,1,JLM,1,true,opponent
+11412,Dominic,Lockhart,Forward,ROS,Rostock Seawolves,4.8,0,0,false,1,JLM,1,true,opponent
+11413,Mika,Freitag,Guard,ROS,Rostock Seawolves,4.1,0,0,false,1,JLM,1,true,opponent
+11414,Bruno,Loll,Center,ROS,Rostock Seawolves,4.1,0,0,false,1,JLM,1,true,opponent
+11415,Philipp,Hartwich,Center,ROS,Rostock Seawolves,4.1,0,0,false,1,JLM,1,true,opponent
+11416,Matthes,Tilsen,Guard,ROS,Rostock Seawolves,4,0,0,false,1,JLM,1,true,opponent
+11417,Benedict,Baumgarth,Forward,ROS,Rostock Seawolves,4,0,0,false,1,JLM,1,true,opponent
+11418,Cedric,Henderson,Forward,SIA,Siauliai Basketball,10.5,0,0,false,1,LDN,2,true,opponent
+11419,Dayvion,Mcknight,Guard,SIA,Siauliai Basketball,9.8,0,0,false,1,LDN,2,true,opponent
+11420,Elfton,Reid,Center,SIA,Siauliai Basketball,9.5,0,0,false,1,LDN,2,true,opponent
+11421,Simas,Jarumbauskas,Forward,SIA,Siauliai Basketball,9.1,0,0,false,1,LDN,2,true,opponent
+11422,Tauras,Jogela,Forward,SIA,Siauliai Basketball,8,0,0,false,1,LDN,2,true,opponent
+11423,Mike,Caffey,Guard,SIA,Siauliai Basketball,8.3,0,0,false,1,LDN,2,true,opponent
+11424,Selim,Fofana,Guard,SIA,Siauliai Basketball,7.9,0,0,false,1,LDN,2,true,opponent
+11425,Erikas,Venskus,Center,SIA,Siauliai Basketball,7.2,0,0,false,1,LDN,2,true,opponent
+11426,Dovydas,Romancenko,Forward,SIA,Siauliai Basketball,5.5,0,0,false,1,LDN,2,true,opponent
+11427,Darius,Songaila,Head Coach,SIA,Siauliai Basketball,5.5,0,0,false,1,LDN,2,true,opponent
+11428,Rokas,Civilis,Forward,SIA,Siauliai Basketball,4,0,0,false,1,LDN,2,true,opponent
+11429,Till,Pape,Forward,SKY,Skyliners Frankfurt,10.4,0,0,false,1,URV,1,true,opponent
+11430,William,Christmas,Guard,SKY,Skyliners Frankfurt,10.1,0,0,false,1,URV,1,true,opponent
+11431,Marcus,Garrett,Guard,SKY,Skyliners Frankfurt,10,0,0,false,1,URV,1,true,opponent
+11432,Judah,Mintz,Guard,SKY,Skyliners Frankfurt,9.7,0,0,false,1,URV,1,true,opponent
+11433,Isaiah,Swope,Guard,SKY,Skyliners Frankfurt,9.6,0,0,false,1,URV,1,true,opponent
+11434,Race,Thompson,Forward,SKY,Skyliners Frankfurt,9.2,0,0,false,1,URV,1,true,opponent
+11435,Ryan,Hawkins,Forward,SKY,Skyliners Frankfurt,8.9,0,0,false,1,URV,1,true,opponent
+11436,Nahiem,Alleyne,Guard,SKY,Skyliners Frankfurt,8,0,0,false,1,URV,1,true,opponent
+11437,Thomas,Klepeisz,Guard,SKY,Skyliners Frankfurt,6.5,0,0,false,1,URV,1,true,opponent
+11438,Desmond,Watson,Guard,SKY,Skyliners Frankfurt,6,0,0,false,1,URV,1,true,opponent
+11439,Kalus,Perwas,Head Coach,SKY,Skyliners Frankfurt,6,0,0,false,1,URV,1,true,opponent
+11440,Jacob,Knauf,Center,SKY,Skyliners Frankfurt,5.5,0,0,false,1,URV,1,true,opponent
+11441,Raddi,Caisin,Forward,SKY,Skyliners Frankfurt,5,0,0,false,1,URV,1,true,opponent
+11442,Dusan,Nikolic,Guard,SKY,Skyliners Frankfurt,4.5,0,0,false,1,URV,1,true,opponent
+11443,Moses,Polking,Center,SKY,Skyliners Frankfurt,4.2,0,0,false,1,URV,1,true,opponent
+11444,Anthony,Hickey,Guard,WKS,Slask Wroclaw,11.1,0,0,false,1,BUD,2,true,opponent
+11445,Malik,Parsons,Guard,WKS,Slask Wroclaw,10.1,0,0,false,1,BUD,2,true,opponent
+11446,John,Egbunu,Center,WKS,Slask Wroclaw,10.1,0,0,false,1,BUD,2,true,opponent
+11447,Matt,Rogers,Center,WKS,Slask Wroclaw,10,0,0,false,1,BUD,2,true,opponent
+11448,Anthony,Wrzeszcz,Guard,WKS,Slask Wroclaw,7,0,0,false,1,BUD,2,true,opponent
+11449,Devin,Robinson,Forward,WKS,Slask Wroclaw,13.4,0,0,false,1,BUD,2,true,opponent
+11450,Danni,Franco,Head Coach,WKS,Slask Wroclaw,5.5,0,0,false,1,BUD,2,true,opponent
+11451,Blazej,Kulikowksi,Guard,WKS,Slask Wroclaw,4.9,0,0,false,1,BUD,2,true,opponent
+11452,Kyrell,Luc,Guard,WKS,Slask Wroclaw,4.8,0,0,false,1,BUD,2,true,opponent
+11453,Blazej,Czerniewicz,Guard,WKS,Slask Wroclaw,4.2,0,0,false,1,BUD,2,true,opponent
+11454,Terrell,Carter,Center,TOF,Tofas Bursa,10.4,0,0,false,1,CHE,1,true,opponent
+11455,Tre'shawn,Thurman,Forward,TOF,Tofas Bursa,10.3,0,0,false,1,CHE,1,true,opponent
+11456,Gabe,Brown,Forward,TOF,Tofas Bursa,10.1,0,0,false,1,CHE,1,true,opponent
+11457,Jamuni,Mcneace,Center,TOF,Tofas Bursa,9.9,0,0,false,1,CHE,1,true,opponent
+11458,Zach,Nutall,Guard,TOF,Tofas Bursa,9.3,0,0,false,1,CHE,1,true,opponent
+11459,Yigitcan,Saybir,Forward,TOF,Tofas Bursa,8.8,0,0,false,1,CHE,1,true,opponent
+11460,Jordan,Floyd,Guard,TOF,Tofas Bursa,8.3,0,0,false,1,CHE,1,true,opponent
+11461,Massimo,Cancellieri,Head Coach,TOF,Tofas Bursa,7,0,0,false,1,CHE,1,true,opponent
+11462,Sadık Emir,Kabaca,Forward,TOF,Tofas Bursa,6.2,0,0,false,1,CHE,1,true,opponent
+11463,Harun ,Apaydin,Guard,TOF,Tofas Bursa,4,0,0,false,1,CHE,1,true,opponent
+11464,Efe,Postel,Guard,TOF,Tofas Bursa,4,0,0,false,1,CHE,1,true,opponent
+11465,Jerrick,Harding,Guard,TTA,Turk Telekom Ankara,14.4,0,0,false,1,LLT,2,true,opponent
+11466,Shaq,Mckissic,Forward,TTA,Turk Telekom Ankara,10,0,0,false,1,LLT,2,true,opponent
+11467,Tony,Taylor,Guard,TTA,Turk Telekom Ankara,8.4,0,0,false,1,LLT,2,true,opponent
+11468,Dogus,Ozdemirglu,Guard,TTA,Turk Telekom Ankara,8,0,0,false,1,LLT,2,true,opponent
+11469,Tim,Schneider,Forward,TTA,Turk Telekom Ankara,6.8,0,0,false,1,LLT,2,true,opponent
+11470,Malcolm,Hill,Forward,UBT,U-BT Cluj-Napoca,12,0,0,false,1,RMA,2,true,opponent
+11471,Javonte,Smart,Guard,UBT,U-BT Cluj-Napoca,11.3,0,0,false,1,RMA,2,true,opponent
+11472,Otis,Livingston Ii,Guard,UBT,U-BT Cluj-Napoca,10.2,0,0,false,1,RMA,2,true,opponent
+11473,Christian,Bishop,Center,UBT,U-BT Cluj-Napoca,9.9,0,0,false,1,RMA,2,true,opponent
+11474,Jalyn,Mccreary,Forward,UBT,U-BT Cluj-Napoca,9.8,0,0,false,1,RMA,2,true,opponent
+11475,Andrei,Cepoi,Guard,UBT,U-BT Cluj-Napoca,4,0,0,false,1,RMA,2,true,opponent
+11476,Tudor,Tancau,Center,UBT,U-BT Cluj-Napoca,4,0,0,false,1,RMA,2,true,opponent
+11477,Dusan,Beslac,Forward,UBT,U-BT Cluj-Napoca,9.5,0,0,false,1,RMA,2,true,opponent
+11478,Javon,Bess,Forward,UBT,U-BT Cluj-Napoca,9,0,0,false,1,RMA,2,true,opponent
+11479,Uros,Plavsic,Center,UBT,U-BT Cluj-Napoca,8.8,0,0,false,1,RMA,2,true,opponent
+11480,Kristian,Kullamae,Guard,UBT,U-BT Cluj-Napoca,8.2,0,0,false,1,RMA,2,true,opponent
+11481,Luca-ionut,Illes,Guard,UBT,U-BT Cluj-Napoca,5,0,0,false,1,RMA,2,true,opponent
+11482,Bogdan,Nicolescu,Forward,UBT,U-BT Cluj-Napoca,4.4,0,0,false,1,RMA,2,true,opponent
+11483,Sir'jabari,Rice,Guard,URV,Umana Reyer Venice,11,0,0,false,1,SKY,1,true,opponent
+11484,Enoch,Boakye,Center,URV,Umana Reyer Venice,10,0,0,false,1,SKY,1,true,opponent
+11485,Sasha,Grant,Forward,URV,Umana Reyer Venice,5.3,0,0,false,1,SKY,1,true,opponent
+11486,Octavio,Maretto,Forward,URV,Umana Reyer Venice,5,0,0,false,1,SKY,1,true,opponent
