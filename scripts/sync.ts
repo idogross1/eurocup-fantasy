@@ -27,7 +27,9 @@ async function main() {
   const s = res.sync!;
   console.log(
     `synced Matchday ${s.matchdayNumber} (id ${s.matchdayId}) in ${ms}ms\n` +
-      `  players: ${s.playersUpserted}   real teams: ${s.teamsUpserted}\n` +
+      `  players: ${s.playersUpserted}` +
+      (s.prunedPlayers ? ` (pruned ${s.prunedPlayers} no longer in pool)` : "") +
+      `   real teams: ${s.teamsUpserted}\n` +
       `  projections recomputed: ${res.projected ?? "—"}`,
   );
   console.log("\nyour fantasy teams:");

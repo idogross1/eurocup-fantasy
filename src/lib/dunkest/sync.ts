@@ -44,6 +44,7 @@ export type SyncSummary = {
   matchdayNumber: number;
   playersListId: number;
   playersUpserted: number;
+  prunedPlayers: number;
   teamsUpserted: number;
   syncedTeams: { id: number; name: string; rosterSize: number; position: number | null }[];
   ranAt: string;
@@ -127,11 +128,13 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
   // player pool -> players + player_snapshots (source 'api')
   const players = await fetchAllPlayers(api, plId, mdId);
   let playersUpserted = 0;
+  const seenPlayerIds = new Set<number>();
   db.transaction(() => {
     for (const p of players) {
       const position = resolvePosition(p);
       const abbr = p.team?.abbreviation;
       if (!position || !abbr) continue;
+      seenPlayerIds.add(p.id);
 
       // ensure the real team exists even if it wasn't in lc.teams
       db.insert(schema.realTeams)
@@ -183,6 +186,45 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
       playersUpserted += 1;
     }
   });
+
+  // Prune players that dropped out of the live pool (cut, transferred, left off
+  // the squad). Their stale snapshot/projection would otherwise let the
+  // optimiser draft a player who can't actually be bought. Guarded so a partial
+  // API response can't wipe the pool.
+  let prunedPlayers = 0;
+  if (playersUpserted >= 100) {
+    const currentSnapshots = db
+      .select({ playerId: schema.playerSnapshots.playerId })
+      .from(schema.playerSnapshots)
+      .where(eq(schema.playerSnapshots.matchdayId, mdId))
+      .all();
+    const staleIds = currentSnapshots
+      .map((r) => r.playerId)
+      .filter((id) => !seenPlayerIds.has(id));
+    if (staleIds.length > 0) {
+      db.transaction(() => {
+        for (const id of staleIds) {
+          db.delete(schema.projections)
+            .where(
+              and(
+                eq(schema.projections.playerId, id),
+                eq(schema.projections.matchdayId, mdId),
+              ),
+            )
+            .run();
+          db.delete(schema.playerSnapshots)
+            .where(
+              and(
+                eq(schema.playerSnapshots.playerId, id),
+                eq(schema.playerSnapshots.matchdayId, mdId),
+              ),
+            )
+            .run();
+        }
+      });
+      prunedPlayers = staleIds.length;
+    }
+  }
 
   // your fantasy teams + their real rosters
   const fts = await api.fantasyTeams(gameMode);
@@ -310,6 +352,7 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
     matchdayNumber: mdNum,
     playersListId: plId,
     playersUpserted,
+    prunedPlayers,
     teamsUpserted,
     syncedTeams,
     ranAt: new Date().toISOString(),

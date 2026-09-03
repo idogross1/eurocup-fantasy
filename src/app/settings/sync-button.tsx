@@ -6,7 +6,12 @@ import { useState } from "react";
 type SyncResponse = {
   ok?: boolean;
   error?: string;
-  sync?: { matchdayNumber: number; playersUpserted: number; syncedTeams: { name: string }[] };
+  sync?: {
+    matchdayNumber: number;
+    playersUpserted: number;
+    prunedPlayers?: number;
+    syncedTeams: { name: string }[];
+  };
   projected?: number;
   teams?: { id: number; name: string; status: string; projPoints: number }[];
 };
@@ -28,6 +33,7 @@ export function SyncButton({ disabled }: { disabled?: boolean }) {
         const parts = [
           `Matchday ${data.sync?.matchdayNumber}`,
           `${data.sync?.playersUpserted ?? 0} players`,
+          data.sync?.prunedPlayers ? `${data.sync.prunedPlayers} pruned` : null,
           data.projected ? `${data.projected} projected` : null,
           data.teams ? `${data.teams.length} teams rebuilt` : null,
         ].filter(Boolean);
