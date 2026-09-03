@@ -18,7 +18,14 @@ import * as schema from "./schema";
 export type Db = LibSQLDatabase<typeof schema>;
 
 export function resolveDbUrl(): string {
-  const raw = (process.env.DATABASE_URL ?? "file:./data/eurocup.sqlite").trim();
+  let raw = (process.env.DATABASE_URL ?? "file:./data/eurocup.sqlite").trim();
+
+  // tolerate a Turso URL that lost its scheme when it was pasted
+  // ("//name.turso.io" or bare "name.turso.io")
+  if (/\.turso\.io/.test(raw) && !/^[a-z]+:\/\//i.test(raw)) {
+    raw = `libsql://${raw.replace(/^\/+/, "")}`;
+  }
+
   if (!raw.startsWith("file:")) return raw;
 
   // normalise a relative file: URL to an absolute file:// URL and ensure the dir exists
