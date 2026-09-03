@@ -1,13 +1,12 @@
 import { and, eq } from "drizzle-orm";
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 
-import { schema } from "@/db/connection";
+import { schema, type Db } from "@/db/connection";
 import type { PlayerPosition } from "@/db/schema";
 import { FORMATIONS } from "@/lib/optimizer/formations";
 
 import { getCurrentMatchday, type MatchdayRow } from "./players";
 
-type DB = BetterSQLite3Database<typeof schema>;
+type DB = Db;
 
 export type PlanPlayer = {
   id: number;

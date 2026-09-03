@@ -1,7 +1,6 @@
 import { and, eq, inArray } from "drizzle-orm";
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 
-import { schema } from "@/db/connection";
+import { schema, type Db } from "@/db/connection";
 import type { PlayerPosition } from "@/db/schema";
 import { getSetting } from "@/lib/kv";
 import { loadOptimizerPool, prefilterPool } from "@/lib/optimizer/run";
@@ -10,7 +9,7 @@ import type { StrategySpec } from "@/lib/optimizer/types";
 
 import { tradeWindowStatus, type WindowStatus } from "./window";
 
-type DB = BetterSQLite3Database<typeof schema>;
+type DB = Db;
 
 export type TradeMovePlayer = {
   id: number;

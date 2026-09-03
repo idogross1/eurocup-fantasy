@@ -1,5 +1,5 @@
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import { createClient, type Client } from "@libsql/client";
+import { drizzle, type LibSQLDatabase } from "drizzle-orm/libsql";
 import { existsSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
@@ -8,22 +8,31 @@ import * as schema from "./schema";
 /**
  * Raw connection factory, safe to import from CLI scripts (no "server-only"
  * guard). App code should import { db } from "./index" instead.
+ *
+ * One driver, two environments:
+ *   - local:  DATABASE_URL=file:./data/eurocup.sqlite   (a plain SQLite file)
+ *   - Turso:  DATABASE_URL=libsql://<db>.turso.io  + DATABASE_AUTH_TOKEN=...
+ * The schema/migrations are SQLite dialect and identical for both.
  */
 
-export function resolveDbPath(): string {
-  const url = process.env.DATABASE_URL ?? "./data/eurocup.sqlite";
-  return resolve(process.cwd(), url);
+export type Db = LibSQLDatabase<typeof schema>;
+
+export function resolveDbUrl(): string {
+  const raw = process.env.DATABASE_URL ?? "file:./data/eurocup.sqlite";
+  if (!raw.startsWith("file:")) return raw;
+
+  // normalise a relative file: URL to an absolute path and ensure the dir exists
+  const rel = raw.slice("file:".length);
+  const abs = resolve(process.cwd(), rel);
+  if (!existsSync(dirname(abs))) mkdirSync(dirname(abs), { recursive: true });
+  return `file:${abs}`;
 }
 
-export function createDb() {
-  const dbPath = resolveDbPath();
-  if (!existsSync(dirname(dbPath))) {
-    mkdirSync(dirname(dbPath), { recursive: true });
-  }
-  const sqlite = new Database(dbPath);
-  sqlite.pragma("journal_mode = WAL");
-  sqlite.pragma("foreign_keys = ON");
-  return { db: drizzle(sqlite, { schema }), sqlite };
+export function createDb(): { db: Db; client: Client } {
+  const url = resolveDbUrl();
+  const authToken = process.env.DATABASE_AUTH_TOKEN?.trim() || undefined;
+  const client = createClient(url.startsWith("file:") ? { url } : { url, authToken });
+  return { db: drizzle(client, { schema }), client };
 }
 
 export { schema };

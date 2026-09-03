@@ -1,10 +1,11 @@
 import "server-only";
 
-import { createDb, schema } from "./connection";
+import { createDb, schema, type Db } from "./connection";
 
 /**
  * Single DB access point for app (server component / route handler) code.
- * The step-4 swap to Neon Postgres only touches connection.ts + schema dialect.
+ * Swapping databases only touches connection.ts.
  */
-export const { db } = createDb();
+export const { db, client } = createDb();
 export { schema };
+export type { Db };

@@ -1,9 +1,8 @@
 import { desc, eq } from "drizzle-orm";
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 
-import { schema } from "@/db/connection";
+import { schema, type Db } from "@/db/connection";
 
-type DB = BetterSQLite3Database<typeof schema>;
+type DB = Db;
 
 /** settings table helpers — values are JSON-encoded. */
 

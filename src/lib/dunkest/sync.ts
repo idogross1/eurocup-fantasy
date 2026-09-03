@@ -1,7 +1,6 @@
 import { and, eq, ne, sql } from "drizzle-orm";
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 
-import { schema } from "@/db/connection";
+import { schema, type Db } from "@/db/connection";
 import type { PlayerPosition } from "@/db/schema";
 import { setSetting } from "@/lib/kv";
 
@@ -9,7 +8,7 @@ import { makeClient } from "./client";
 import { endpoints, fetchAllPlayers } from "./endpoints";
 import type { DunkPlayer } from "./types";
 
-type DB = BetterSQLite3Database<typeof schema>;
+type DB = Db;
 
 const POSITION_BY_ID: Record<number, PlayerPosition> = {
   28: "Guard",

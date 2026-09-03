@@ -1,12 +1,11 @@
 import { desc, eq } from "drizzle-orm";
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 
-import { schema } from "@/db/connection";
+import { schema, type Db } from "@/db/connection";
 import { syncFromDunkest, type SyncSummary } from "@/lib/dunkest/sync";
 import { optimizeAllTeams } from "@/lib/optimizer/run";
 import { computeProjections } from "@/lib/projections/compute";
 
-type DB = BetterSQLite3Database<typeof schema>;
+type DB = Db;
 
 async function currentMatchdayId(db: DB): Promise<number | null> {
   const cur = db

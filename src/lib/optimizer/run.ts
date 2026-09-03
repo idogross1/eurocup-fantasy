@@ -1,13 +1,12 @@
 import { and, eq } from "drizzle-orm";
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 
-import { schema } from "@/db/connection";
+import { schema, type Db } from "@/db/connection";
 import { setSetting } from "@/lib/kv";
 
 import { solveTeam, type SolveOptions } from "./solve";
 import type { OptimizerPlayer, StrategySpec, TeamResult } from "./types";
 
-type DB = BetterSQLite3Database<typeof schema>;
+type DB = Db;
 
 const POOL_TOP_PER_POS: Record<string, number> = { Guard: 24, Forward: 24, Center: 16 };
 const POOL_CHEAP_PER_POS = 5;

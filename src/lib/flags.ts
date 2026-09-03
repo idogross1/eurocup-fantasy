@@ -1,10 +1,9 @@
 import { and, eq } from "drizzle-orm";
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 
-import { schema } from "@/db/connection";
+import { schema, type Db } from "@/db/connection";
 import { setSetting } from "@/lib/kv";
 
-type DB = BetterSQLite3Database<typeof schema>;
+type DB = Db;
 
 export const OPTIMIZER_STALE_KEY = "optimizerStale";
 
