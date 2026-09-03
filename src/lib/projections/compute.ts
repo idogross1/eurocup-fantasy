@@ -106,7 +106,8 @@ export async function computeProjections(
   // auto-ramp the stats blend unless it's been pinned in settings.projectionModel
   let params = base;
   if (base.statsBlend === 0) {
-    const round = getSetting<{ number: number | null }>(db, "currentRound")?.number ?? null;
+    const round =
+      (await getSetting<{ number: number | null }>(db, "currentRound"))?.number ?? null;
     const anyReal = rows.some((r) => r.avgPts > 0);
     if (anyReal) params = { ...base, statsBlend: autoStatsBlend(round) };
   }
@@ -142,13 +143,12 @@ export async function computeProjections(
     };
   });
 
-  // better-sqlite3 transactions are synchronous — use .run(), not an async cb.
-  db.transaction((tx) => {
+  await db.transaction(async (tx) => {
     for (const v of values) {
       const { _name, _position, ...record } = v;
       void _name;
       void _position;
-      tx
+      await tx
         .insert(schema.projections)
         .values(record)
         .onConflictDoUpdate({
@@ -161,8 +161,7 @@ export async function computeProjections(
             model: record.model,
             computedAt: new Date().toISOString(),
           },
-        })
-        .run();
+        });
     }
   });
 

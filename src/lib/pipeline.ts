@@ -8,13 +8,13 @@ import { computeProjections } from "@/lib/projections/compute";
 type DB = Db;
 
 async function currentMatchdayId(db: DB): Promise<number | null> {
-  const cur = db
+  const cur = await db
     .select()
     .from(schema.matchdays)
     .where(eq(schema.matchdays.isCurrent, true))
     .get();
   if (cur) return cur.id;
-  const latest = db
+  const latest = await db
     .select()
     .from(schema.matchdays)
     .orderBy(desc(schema.matchdays.number))

@@ -10,8 +10,8 @@ import { runFullRefresh } from "../src/lib/pipeline";
  * Usage: npm run sync [--no-optimize]
  */
 async function main() {
-  const { db, sqlite } = createDb();
-  const token = resolveDunkestToken(db);
+  const { db, client } = createDb();
+  const token = await resolveDunkestToken(db);
   if (!token) {
     console.error(
       "no Dunkest token. Set DUNKEST_TOKEN in .env, or paste one on the /settings page.",
@@ -43,7 +43,7 @@ async function main() {
     }
   }
 
-  sqlite.close();
+  client.close();
 }
 
 main().catch((e) => {

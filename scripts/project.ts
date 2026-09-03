@@ -10,7 +10,7 @@ import { computeProjections } from "../src/lib/projections/compute";
  * Usage: npm run project [matchdayId]
  */
 async function main() {
-  const { db, sqlite } = createDb();
+  const { db, client } = createDb();
 
   let matchdayId = Number(process.argv[2]);
   if (!Number.isFinite(matchdayId)) {
@@ -70,7 +70,7 @@ async function main() {
     );
   }
 
-  sqlite.close();
+  client.close();
 }
 
 main();

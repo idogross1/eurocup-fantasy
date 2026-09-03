@@ -7,7 +7,7 @@ import { computeTradePlan } from "../src/lib/trades/plan";
 
 /** Print the trade / build plan for the current matchday. Usage: npm run trades [matchdayId] */
 async function main() {
-  const { db, sqlite } = createDb();
+  const { db, client } = createDb();
   let matchdayId = Number(process.argv[2]);
   if (!Number.isFinite(matchdayId)) {
     const [current] = await db
@@ -50,7 +50,7 @@ async function main() {
     }
     console.log();
   }
-  sqlite.close();
+  client.close();
 }
 
 main().catch((e) => {

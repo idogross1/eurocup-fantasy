@@ -137,35 +137,33 @@ export async function optimizeAllTeams(db: DB, matchdayId: number): Promise<Opti
   }
 
   await persistRosters(db, matchdayId, results);
-  setSetting(db, "optimizerStale", false);
+  await setSetting(db, "optimizerStale", false);
   return { matchdayId, teams: results };
 }
 
 async function persistRosters(db: DB, matchdayId: number, results: TeamResult[]) {
-  db.transaction((tx) => {
+  await db.transaction(async (tx) => {
     for (const res of results) {
-      tx.delete(schema.rosterEntries)
+      await tx
+        .delete(schema.rosterEntries)
         .where(
           and(
             eq(schema.rosterEntries.fantasyTeamId, res.spec.teamId),
             eq(schema.rosterEntries.matchdayId, matchdayId),
             eq(schema.rosterEntries.source, "optimizer"),
           ),
-        )
-        .run();
+        );
       if (res.status !== "optimal") continue;
       for (const p of res.players) {
-        tx.insert(schema.rosterEntries)
-          .values({
-            fantasyTeamId: res.spec.teamId,
-            matchdayId,
-            playerId: p.id,
-            slot: p.slot,
-            isCaptain: p.isCaptain,
-            formationId: res.formationId,
-            source: "optimizer",
-          })
-          .run();
+        await tx.insert(schema.rosterEntries).values({
+          fantasyTeamId: res.spec.teamId,
+          matchdayId,
+          playerId: p.id,
+          slot: p.slot,
+          isCaptain: p.isCaptain,
+          formationId: res.formationId,
+          source: "optimizer",
+        });
       }
     }
   });

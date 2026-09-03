@@ -143,7 +143,7 @@ function pairMoves(
 
 export async function computeTradePlan(db: DB, matchdayId: number): Promise<TradePlan> {
   const window = tradeWindowStatus(
-    getSetting<{ number: number | null; startedAt: string | null }>(db, "currentRound"),
+    await getSetting<{ number: number | null; startedAt: string | null }>(db, "currentRound"),
   );
   const maxMoves = window.maxMoves === "unlimited" ? 11 : window.maxMoves;
 
@@ -256,9 +256,9 @@ export async function computeTradePlan(db: DB, matchdayId: number): Promise<Trad
       };
       const res = solveTeam(filtered, spec, {
         anchor: { ids: new Set([...actualIds]), maxChanges: maxMoves },
-        contrarianWeight: getSetting<number>(db, "contrarianWeight") ?? 0.2,
-        turnBalancePenalty: getSetting<number>(db, "turnBalancePenalty") ?? 6,
-        minPerTurn: getSetting<number>(db, "minPerTurn") ?? 5,
+        contrarianWeight: (await getSetting<number>(db, "contrarianWeight")) ?? 0.2,
+        turnBalancePenalty: (await getSetting<number>(db, "turnBalancePenalty")) ?? 6,
+        minPerTurn: (await getSetting<number>(db, "minPerTurn")) ?? 5,
       });
       if (res.status === "optimal") {
         targetIds = new Set(res.players.map((p) => p.id));
@@ -291,7 +291,7 @@ export async function computeTradePlan(db: DB, matchdayId: number): Promise<Trad
     });
   }
 
-  persist(db, matchdayId, teams);
+  await persist(db, matchdayId, teams);
 
   // attach persisted ids + applied flags back onto the moves
   const saved = await db
@@ -335,36 +335,33 @@ function emptyPlan(
   };
 }
 
-function persist(db: DB, matchdayId: number, teams: TeamTradePlan[]) {
+async function persist(db: DB, matchdayId: number, teams: TeamTradePlan[]) {
   const key = (ft: number, out: number | null, inp: number | null) =>
     `${ft}:${out ?? "-"}:${inp ?? "-"}`;
+  const appliedRows = await db
+    .select()
+    .from(schema.trades)
+    .where(and(eq(schema.trades.matchdayId, matchdayId), eq(schema.trades.applied, true)));
   const appliedKeys = new Set(
-    db
-      .select()
-      .from(schema.trades)
-      .where(and(eq(schema.trades.matchdayId, matchdayId), eq(schema.trades.applied, true)))
-      .all()
-      .map((r) => key(r.fantasyTeamId, r.outPlayerId, r.inPlayerId)),
+    appliedRows.map((r) => key(r.fantasyTeamId, r.outPlayerId, r.inPlayerId)),
   );
 
-  db.transaction((tx) => {
-    tx.delete(schema.trades)
-      .where(and(eq(schema.trades.matchdayId, matchdayId), eq(schema.trades.applied, false)))
-      .run();
+  await db.transaction(async (tx) => {
+    await tx
+      .delete(schema.trades)
+      .where(and(eq(schema.trades.matchdayId, matchdayId), eq(schema.trades.applied, false)));
     for (const t of teams) {
       for (const m of t.moves) {
         if (appliedKeys.has(key(t.fantasyTeamId, m.out?.id ?? null, m.in?.id ?? null))) continue;
-        tx.insert(schema.trades)
-          .values({
-            fantasyTeamId: t.fantasyTeamId,
-            matchdayId,
-            outPlayerId: m.out?.id ?? null,
-            inPlayerId: m.in?.id ?? null,
-            creditDelta: m.creditDelta,
-            projDelta: m.projDelta,
-            kind: m.kind,
-          })
-          .run();
+        await tx.insert(schema.trades).values({
+          fantasyTeamId: t.fantasyTeamId,
+          matchdayId,
+          outPlayerId: m.out?.id ?? null,
+          inPlayerId: m.in?.id ?? null,
+          creditDelta: m.creditDelta,
+          projDelta: m.projDelta,
+          kind: m.kind,
+        });
       }
     }
   });

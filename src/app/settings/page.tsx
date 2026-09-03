@@ -8,20 +8,20 @@ import { SyncButton } from "./sync-button";
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const storedToken = getSetting<string>(db, DUNKEST_TOKEN_KEY);
+  const storedToken = await getSetting<string>(db, DUNKEST_TOKEN_KEY);
   const envToken = Boolean(process.env.DUNKEST_TOKEN?.trim());
   const hasToken = envToken || Boolean(storedToken);
-  const lastSync = getLastSync(db);
+  const lastSync = await getLastSync(db);
   const syncedTeams = await db.select().from(schema.syncedTeams).orderBy(schema.syncedTeams.dunkestTeamId);
   const fantasyTeams = await db.select().from(schema.fantasyTeams).orderBy(schema.fantasyTeams.id);
 
   const safeK = fantasyTeams.find((t) => t.strategy === "safe")?.riskK ?? 0.6;
   const aggK = fantasyTeams.find((t) => t.strategy === "aggressive")?.riskK ?? 0.6;
   const budget = fantasyTeams[0]?.budget ?? 100;
-  const overlapCap = getSetting<number>(db, "overlapCap") ?? 6;
-  const contrarianWeight = getSetting<number>(db, "contrarianWeight") ?? 0.2;
-  const turnBalancePenalty = getSetting<number>(db, "turnBalancePenalty") ?? 6;
-  const minPerTurn = getSetting<number>(db, "minPerTurn") ?? 5;
+  const overlapCap = (await getSetting<number>(db, "overlapCap")) ?? 6;
+  const contrarianWeight = (await getSetting<number>(db, "contrarianWeight")) ?? 0.2;
+  const turnBalancePenalty = (await getSetting<number>(db, "turnBalancePenalty")) ?? 6;
+  const minPerTurn = (await getSetting<number>(db, "minPerTurn")) ?? 5;
 
   const mask = (t: string) => (t.length > 10 ? `${t.slice(0, 4)}…${t.slice(-4)}` : "set");
 

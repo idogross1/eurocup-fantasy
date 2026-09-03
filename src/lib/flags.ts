@@ -7,8 +7,8 @@ type DB = Db;
 
 export const OPTIMIZER_STALE_KEY = "optimizerStale";
 
-export function markOptimizerStale(db: DB) {
-  setSetting(db, OPTIMIZER_STALE_KEY, true);
+export async function markOptimizerStale(db: DB) {
+  await setSetting(db, OPTIMIZER_STALE_KEY, true);
 }
 
 type FlagPatch = {
@@ -23,8 +23,8 @@ type FlagPatch = {
  * the current round + the player's avg_pts so the dashboard can later detect a
  * flag that's gone stale (player healthy again, or has scored since).
  */
-export function setPlayerFlag(db: DB, playerId: number, patch: FlagPatch) {
-  const existing = db
+export async function setPlayerFlag(db: DB, playerId: number, patch: FlagPatch) {
+  const existing = await db
     .select()
     .from(schema.playerFlags)
     .where(eq(schema.playerFlags.playerId, playerId))
@@ -47,13 +47,13 @@ export function setPlayerFlag(db: DB, playerId: number, patch: FlagPatch) {
   const wasOut = existing?.injuryOverride === "out";
   const nowOut = next.injuryOverride === "out";
   if (nowOut && !wasOut) {
-    const md = db
+    const md = await db
       .select()
       .from(schema.matchdays)
       .where(eq(schema.matchdays.isCurrent, true))
       .get();
     const snap = md
-      ? db
+      ? await db
           .select({ avg: schema.playerSnapshots.avgPts })
           .from(schema.playerSnapshots)
           .where(
@@ -79,20 +79,20 @@ export function setPlayerFlag(db: DB, playerId: number, patch: FlagPatch) {
   const isEmpty =
     !row.lock && !row.exclude && row.boostPct === 0 && row.injuryOverride == null;
   if (isEmpty) {
-    db.delete(schema.playerFlags).where(eq(schema.playerFlags.playerId, playerId)).run();
+    await db.delete(schema.playerFlags).where(eq(schema.playerFlags.playerId, playerId));
   } else {
-    db.insert(schema.playerFlags)
+    await db
+      .insert(schema.playerFlags)
       .values(row)
-      .onConflictDoUpdate({ target: schema.playerFlags.playerId, set: row })
-      .run();
+      .onConflictDoUpdate({ target: schema.playerFlags.playerId, set: row });
   }
 
-  markOptimizerStale(db);
+  await markOptimizerStale(db);
 }
 
-export function clearPlayerFlag(db: DB, playerId: number) {
-  db.delete(schema.playerFlags).where(eq(schema.playerFlags.playerId, playerId)).run();
-  markOptimizerStale(db);
+export async function clearPlayerFlag(db: DB, playerId: number) {
+  await db.delete(schema.playerFlags).where(eq(schema.playerFlags.playerId, playerId));
+  await markOptimizerStale(db);
 }
 
 export type StaleOutFlag = {
@@ -109,15 +109,15 @@ export type StaleOutFlag = {
  *  - "played":  avg_pts has risen since the flag was set (he's been scoring)
  * "played" is the stronger signal — your lineups have been missing a usable guy.
  */
-export function findStaleOutFlags(db: DB): StaleOutFlag[] {
-  const md = db
+export async function findStaleOutFlags(db: DB): Promise<StaleOutFlag[]> {
+  const md = await db
     .select()
     .from(schema.matchdays)
     .where(eq(schema.matchdays.isCurrent, true))
     .get();
   if (!md) return [];
 
-  const rows = db
+  const rows = await db
     .select({
       playerId: schema.playerFlags.playerId,
       overrideAvgPts: schema.playerFlags.overrideAvgPts,
@@ -138,8 +138,7 @@ export function findStaleOutFlags(db: DB): StaleOutFlag[] {
         eq(schema.playerSnapshots.matchdayId, md.id),
       ),
     )
-    .where(eq(schema.playerFlags.injuryOverride, "out"))
-    .all();
+    .where(eq(schema.playerFlags.injuryOverride, "out"));
 
   const out: StaleOutFlag[] = [];
   for (const r of rows) {
@@ -169,8 +168,8 @@ export function findStaleOutFlags(db: DB): StaleOutFlag[] {
   return out;
 }
 
-export function isOptimizerStale(db: DB): boolean {
-  const row = db
+export async function isOptimizerStale(db: DB): Promise<boolean> {
+  const row = await db
     .select()
     .from(schema.settings)
     .where(eq(schema.settings.key, OPTIMIZER_STALE_KEY))

@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  const token = resolveDunkestToken(db);
+  const token = await resolveDunkestToken(db);
   if (!token) {
     return NextResponse.json(
       { error: "No Dunkest token configured. Add one on the Settings page." },

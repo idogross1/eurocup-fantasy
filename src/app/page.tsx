@@ -23,7 +23,7 @@ export default async function Home() {
     getTeamsForCurrentMatchday(),
     getDashboard(),
   ]);
-  const lastSync = getLastSync(db);
+  const lastSync = await getLastSync(db);
   const syncedTeams = await db
     .select()
     .from(schema.syncedTeams)

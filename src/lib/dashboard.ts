@@ -21,15 +21,19 @@ export type DashboardData = {
 
 export async function getDashboard(): Promise<DashboardData> {
   const matchday = await getCurrentMatchday();
-  const lastSync = getLastSync(db);
-  const hasToken = Boolean(resolveDunkestToken(db));
-  const round = getSetting<{ number: number | null; startedAt: string | null }>(db, "currentRound");
+  const [lastSync, hasToken, round, staleOutFlags, optimizerStale] = await Promise.all([
+    getLastSync(db),
+    resolveDunkestToken(db).then(Boolean),
+    getSetting<{ number: number | null; startedAt: string | null }>(db, "currentRound"),
+    findStaleOutFlags(db),
+    isOptimizerStale(db),
+  ]);
   const window = tradeWindowStatus(round);
 
   const actions: ActionItem[] = [];
 
   // stale manual "Out" flags — player contradicts the flag
-  for (const s of findStaleOutFlags(db)) {
+  for (const s of staleOutFlags) {
     actions.push({
       severity: s.reason === "played" ? "high" : "med",
       text: `${s.name} (${s.teamAbbr}) — ${s.detail}`,
@@ -37,7 +41,7 @@ export async function getDashboard(): Promise<DashboardData> {
     });
   }
 
-  if (isOptimizerStale(db)) {
+  if (optimizerStale) {
     actions.push({
       severity: "med",
       text: "Flags/settings changed — rebuild the 3 teams",

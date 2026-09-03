@@ -6,8 +6,12 @@ type DB = Db;
 
 /** settings table helpers — values are JSON-encoded. */
 
-export function getSetting<T = unknown>(db: DB, key: string): T | null {
-  const row = db.select().from(schema.settings).where(eq(schema.settings.key, key)).get();
+export async function getSetting<T = unknown>(db: DB, key: string): Promise<T | null> {
+  const row = await db
+    .select()
+    .from(schema.settings)
+    .where(eq(schema.settings.key, key))
+    .get();
   if (!row) return null;
   try {
     return JSON.parse(row.value) as T;
@@ -16,27 +20,34 @@ export function getSetting<T = unknown>(db: DB, key: string): T | null {
   }
 }
 
-export function setSetting(db: DB, key: string, value: unknown): void {
+export async function setSetting(db: DB, key: string, value: unknown): Promise<void> {
   const v = JSON.stringify(value);
-  db.insert(schema.settings)
+  await db
+    .insert(schema.settings)
     .values({ key, value: v })
-    .onConflictDoUpdate({ target: schema.settings.key, set: { value: v } })
-    .run();
+    .onConflictDoUpdate({ target: schema.settings.key, set: { value: v } });
 }
 
-export function deleteSetting(db: DB, key: string): void {
-  db.delete(schema.settings).where(eq(schema.settings.key, key)).run();
+export async function deleteSetting(db: DB, key: string): Promise<void> {
+  await db.delete(schema.settings).where(eq(schema.settings.key, key));
 }
 
 export const DUNKEST_TOKEN_KEY = "dunkestToken";
 
 /** env var wins over the stored value so deploys can inject it. */
-export function resolveDunkestToken(db: DB): string | null {
+export async function resolveDunkestToken(db: DB): Promise<string | null> {
   const fromEnv = process.env.DUNKEST_TOKEN?.trim();
   if (fromEnv) return fromEnv;
   return getSetting<string>(db, DUNKEST_TOKEN_KEY);
 }
 
-export function getLastSync(db: DB) {
-  return db.select().from(schema.syncLog).orderBy(desc(schema.syncLog.id)).limit(1).get() ?? null;
+export async function getLastSync(db: DB) {
+  return (
+    (await db
+      .select()
+      .from(schema.syncLog)
+      .orderBy(desc(schema.syncLog.id))
+      .limit(1)
+      .get()) ?? null
+  );
 }

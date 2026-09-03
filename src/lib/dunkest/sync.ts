@@ -56,30 +56,30 @@ export type SyncOptions = {
 };
 
 export async function syncFromDunkest(db: DB, opts: SyncOptions): Promise<SyncSummary> {
-  const logId = insertLogStart(db);
+  const logId = await insertLogStart(db);
   try {
     const summary = await runSync(db, opts);
-    db.update(schema.syncLog)
+    await db
+      .update(schema.syncLog)
       .set({ finishedAt: new Date().toISOString(), ok: true, summary: JSON.stringify(summary) })
-      .where(eq(schema.syncLog.id, logId))
-      .run();
+      .where(eq(schema.syncLog.id, logId));
     return summary;
   } catch (e) {
-    db.update(schema.syncLog)
+    await db
+      .update(schema.syncLog)
       .set({ finishedAt: new Date().toISOString(), ok: false, error: (e as Error).message })
-      .where(eq(schema.syncLog.id, logId))
-      .run();
+      .where(eq(schema.syncLog.id, logId));
     throw e;
   }
 }
 
-function insertLogStart(db: DB): number {
-  const row = db
+async function insertLogStart(db: DB): Promise<number> {
+  const row = await db
     .insert(schema.syncLog)
     .values({ startedAt: new Date().toISOString() })
     .returning({ id: schema.syncLog.id })
     .get();
-  return row.id;
+  return row!.id;
 }
 
 async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
@@ -98,29 +98,29 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
   }
 
   // matchday (mark current, clear the flag elsewhere)
-  db.insert(schema.matchdays)
+  await db
+    .insert(schema.matchdays)
     .values({ id: mdId, number: mdNum, label: `Matchday ${mdNum}`, isCurrent: true })
     .onConflictDoUpdate({
       target: schema.matchdays.id,
       set: { number: mdNum, isCurrent: true },
-    })
-    .run();
-  db.update(schema.matchdays)
+    });
+  await db
+    .update(schema.matchdays)
     .set({ isCurrent: false })
-    .where(ne(schema.matchdays.id, mdId))
-    .run();
+    .where(ne(schema.matchdays.id, mdId));
 
   // round state for trade-window advice (see src/lib/trades/window.ts)
-  setSetting(db, "currentRound", { number: roundNumber, startedAt: roundStartedAt });
+  await setSetting(db, "currentRound", { number: roundNumber, startedAt: roundStartedAt });
 
   // real teams
   let teamsUpserted = 0;
   for (const t of lc.teams ?? []) {
     if (!t.abbreviation) continue;
-    db.insert(schema.realTeams)
+    await db
+      .insert(schema.realTeams)
       .values({ abbr: t.abbreviation, name: t.name ?? t.abbreviation })
-      .onConflictDoUpdate({ target: schema.realTeams.abbr, set: { name: t.name ?? t.abbreviation } })
-      .run();
+      .onConflictDoUpdate({ target: schema.realTeams.abbr, set: { name: t.name ?? t.abbreviation } });
     teamsUpserted += 1;
   }
 
@@ -128,7 +128,7 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
   const players = await fetchAllPlayers(api, plId, mdId);
   let playersUpserted = 0;
   const seenPlayerIds = new Set<number>();
-  db.transaction(() => {
+  await db.transaction(async (tx) => {
     for (const p of players) {
       const position = resolvePosition(p);
       const abbr = p.team?.abbreviation;
@@ -136,12 +136,13 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
       seenPlayerIds.add(p.id);
 
       // ensure the real team exists even if it wasn't in lc.teams
-      db.insert(schema.realTeams)
+      await tx
+        .insert(schema.realTeams)
         .values({ abbr, name: p.team?.name ?? abbr })
-        .onConflictDoNothing()
-        .run();
+        .onConflictDoNothing();
 
-      db.insert(schema.players)
+      await tx
+        .insert(schema.players)
         .values({
           id: p.id,
           firstName: p.first_name ?? "",
@@ -157,8 +158,7 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
             position,
             realTeamAbbr: abbr,
           },
-        })
-        .run();
+        });
 
       const snap = {
         playerId: p.id,
@@ -175,13 +175,13 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
         label: p.label ?? null,
         source: "api",
       };
-      db.insert(schema.playerSnapshots)
+      await tx
+        .insert(schema.playerSnapshots)
         .values(snap)
         .onConflictDoUpdate({
           target: [schema.playerSnapshots.playerId, schema.playerSnapshots.matchdayId],
           set: snap,
-        })
-        .run();
+        });
       playersUpserted += 1;
     }
   });
@@ -192,33 +192,32 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
   // API response can't wipe the pool.
   let prunedPlayers = 0;
   if (playersUpserted >= 100) {
-    const currentSnapshots = db
+    const currentSnapshots = await db
       .select({ playerId: schema.playerSnapshots.playerId })
       .from(schema.playerSnapshots)
-      .where(eq(schema.playerSnapshots.matchdayId, mdId))
-      .all();
+      .where(eq(schema.playerSnapshots.matchdayId, mdId));
     const staleIds = currentSnapshots
       .map((r) => r.playerId)
       .filter((id) => !seenPlayerIds.has(id));
     if (staleIds.length > 0) {
-      db.transaction(() => {
+      await db.transaction(async (tx) => {
         for (const id of staleIds) {
-          db.delete(schema.projections)
+          await tx
+            .delete(schema.projections)
             .where(
               and(
                 eq(schema.projections.playerId, id),
                 eq(schema.projections.matchdayId, mdId),
               ),
-            )
-            .run();
-          db.delete(schema.playerSnapshots)
+            );
+          await tx
+            .delete(schema.playerSnapshots)
             .where(
               and(
                 eq(schema.playerSnapshots.playerId, id),
                 eq(schema.playerSnapshots.matchdayId, mdId),
               ),
-            )
-            .run();
+            );
         }
       });
       prunedPlayers = staleIds.length;
@@ -228,30 +227,29 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
   // your fantasy teams + their real rosters
   const fts = await api.fantasyTeams(gameMode);
   const syncedTeams: SyncSummary["syncedTeams"] = [];
+  const existingMappedRows = await db
+    .select({ id: schema.syncedTeams.mappedFantasyTeamId })
+    .from(schema.syncedTeams);
   const existingMapped = new Set(
-    db
-      .select({ id: schema.syncedTeams.mappedFantasyTeamId })
-      .from(schema.syncedTeams)
-      .all()
-      .map((r) => r.id)
-      .filter((v): v is number => v != null),
+    existingMappedRows.map((r) => r.id).filter((v): v is number => v != null),
   );
   let nextAutoMap = [1, 2, 3].find((id) => !existingMapped.has(id)) ?? null;
 
   for (const ft of fts.data ?? []) {
-    const priorMap = db
+    const priorMapRow = await db
       .select({ id: schema.syncedTeams.mappedFantasyTeamId })
       .from(schema.syncedTeams)
       .where(eq(schema.syncedTeams.dunkestTeamId, ft.id))
-      .get()?.id;
-    let mapped = priorMap ?? null;
+      .get();
+    let mapped = priorMapRow?.id ?? null;
     if (mapped == null && nextAutoMap != null) {
       mapped = nextAutoMap;
       existingMapped.add(nextAutoMap);
       nextAutoMap = [1, 2, 3].find((id) => !existingMapped.has(id)) ?? null;
     }
 
-    db.insert(schema.syncedTeams)
+    await db
+      .insert(schema.syncedTeams)
       .values({
         dunkestTeamId: ft.id,
         name: ft.name ?? `Team ${ft.id}`,
@@ -271,21 +269,20 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
           position: ft.position ?? null,
           syncedAt: new Date().toISOString(),
         },
-      })
-      .run();
+      });
 
     const roster = await api.roster(ft.id, mdId);
     const rosterPlayers = roster.data?.players ?? [];
-    const knownPlayerIds = new Set(
-      db.select({ id: schema.players.id }).from(schema.players).all().map((r) => r.id),
-    );
-    db.transaction(() => {
-      db.delete(schema.syncedRosterEntries)
-        .where(eq(schema.syncedRosterEntries.dunkestTeamId, ft.id))
-        .run();
+    const knownPlayerRows = await db.select({ id: schema.players.id }).from(schema.players);
+    const knownPlayerIds = new Set(knownPlayerRows.map((r) => r.id));
+    await db.transaction(async (tx) => {
+      await tx
+        .delete(schema.syncedRosterEntries)
+        .where(eq(schema.syncedRosterEntries.dunkestTeamId, ft.id));
       for (const rp of rosterPlayers) {
         if (!knownPlayerIds.has(rp.id)) continue; // FK safety if roster has a player not in the pool
-        db.insert(schema.syncedRosterEntries)
+        await tx
+          .insert(schema.syncedRosterEntries)
           .values({
             dunkestTeamId: ft.id,
             matchdayId: mdId,
@@ -295,13 +292,12 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
             formationId: roster.data?.formation_id ?? null,
             syncedAt: new Date().toISOString(),
           })
-          .onConflictDoNothing()
-          .run();
+          .onConflictDoNothing();
       }
     });
 
     // history snapshot for this matchday (roster value from the snapshot prices)
-    const rosterValue = db
+    const rosterValueRow = await db
       .select({ v: sql<number>`coalesce(sum(${schema.playerSnapshots.quotation}), 0)` })
       .from(schema.syncedRosterEntries)
       .innerJoin(
@@ -317,7 +313,8 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
           eq(schema.syncedRosterEntries.matchdayId, mdId),
         ),
       )
-      .get()?.v ?? 0;
+      .get();
+    const rosterValue = rosterValueRow?.v ?? 0;
 
     const hist = {
       dunkestTeamId: ft.id,
@@ -330,13 +327,13 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
       rosterSize: rosterPlayers.length,
       capturedAt: new Date().toISOString(),
     };
-    db.insert(schema.teamHistory)
+    await db
+      .insert(schema.teamHistory)
       .values(hist)
       .onConflictDoUpdate({
         target: [schema.teamHistory.dunkestTeamId, schema.teamHistory.matchdayId],
         set: hist,
-      })
-      .run();
+      });
 
     syncedTeams.push({
       id: ft.id,

@@ -9,12 +9,12 @@ import { DUNKEST_TOKEN_KEY, deleteSetting, setSetting } from "@/lib/kv";
 
 export async function saveToken(formData: FormData) {
   const raw = String(formData.get("token") ?? "").trim().replace(/^"|"$/g, "");
-  if (raw) setSetting(db, DUNKEST_TOKEN_KEY, raw);
+  if (raw) await setSetting(db, DUNKEST_TOKEN_KEY, raw);
   revalidatePath("/settings");
 }
 
 export async function clearToken() {
-  deleteSetting(db, DUNKEST_TOKEN_KEY);
+  await deleteSetting(db, DUNKEST_TOKEN_KEY);
   revalidatePath("/settings");
 }
 
@@ -26,15 +26,15 @@ export async function saveMapping(formData: FormData) {
 
   // keep the mapping 1:1 — clear any other synced team already holding this slot
   if (fantasyTeamId != null) {
-    db.update(schema.syncedTeams)
+    await db
+      .update(schema.syncedTeams)
       .set({ mappedFantasyTeamId: null })
-      .where(eq(schema.syncedTeams.mappedFantasyTeamId, fantasyTeamId))
-      .run();
+      .where(eq(schema.syncedTeams.mappedFantasyTeamId, fantasyTeamId));
   }
-  db.update(schema.syncedTeams)
+  await db
+    .update(schema.syncedTeams)
     .set({ mappedFantasyTeamId: fantasyTeamId })
-    .where(eq(schema.syncedTeams.dunkestTeamId, dunkestTeamId))
-    .run();
+    .where(eq(schema.syncedTeams.dunkestTeamId, dunkestTeamId));
   revalidatePath("/settings");
 }
 
@@ -48,22 +48,22 @@ export async function saveTuning(formData: FormData) {
   const safeK = clamp(num("safeK"), 0, 2, 0.6);
   const aggK = clamp(num("aggK"), 0, 2, 0.6);
 
-  db.update(schema.fantasyTeams).set({ budget }).run();
-  db.update(schema.fantasyTeams)
+  await db.update(schema.fantasyTeams).set({ budget });
+  await db
+    .update(schema.fantasyTeams)
     .set({ riskK: safeK })
-    .where(eq(schema.fantasyTeams.strategy, "safe"))
-    .run();
-  db.update(schema.fantasyTeams)
+    .where(eq(schema.fantasyTeams.strategy, "safe"));
+  await db
+    .update(schema.fantasyTeams)
     .set({ riskK: aggK })
-    .where(eq(schema.fantasyTeams.strategy, "aggressive"))
-    .run();
+    .where(eq(schema.fantasyTeams.strategy, "aggressive"));
 
-  setSetting(db, "overlapCap", Math.round(clamp(num("overlapCap"), 3, 11, 6)));
-  setSetting(db, "contrarianWeight", clamp(num("contrarianWeight"), 0, 1, 0.2));
-  setSetting(db, "turnBalancePenalty", clamp(num("turnBalancePenalty"), 0, 20, 6));
-  setSetting(db, "minPerTurn", Math.round(clamp(num("minPerTurn"), 3, 6, 5)));
+  await setSetting(db, "overlapCap", Math.round(clamp(num("overlapCap"), 3, 11, 6)));
+  await setSetting(db, "contrarianWeight", clamp(num("contrarianWeight"), 0, 1, 0.2));
+  await setSetting(db, "turnBalancePenalty", clamp(num("turnBalancePenalty"), 0, 20, 6));
+  await setSetting(db, "minPerTurn", Math.round(clamp(num("minPerTurn"), 3, 6, 5)));
 
-  markOptimizerStale(db);
+  await markOptimizerStale(db);
   revalidatePath("/settings");
   revalidatePath("/");
 }

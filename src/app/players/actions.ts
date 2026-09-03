@@ -16,9 +16,10 @@ export type FlagField = "lock" | "exclude" | "out";
 
 export async function toggleFlag(playerId: number, field: FlagField, on: boolean) {
   if (!Number.isFinite(playerId)) return;
-  if (field === "lock") setPlayerFlag(db, playerId, { lock: on });
-  else if (field === "exclude") setPlayerFlag(db, playerId, { exclude: on });
-  else if (field === "out") setPlayerFlag(db, playerId, { injuryOverride: on ? "out" : null });
+  if (field === "lock") await setPlayerFlag(db, playerId, { lock: on });
+  else if (field === "exclude") await setPlayerFlag(db, playerId, { exclude: on });
+  else if (field === "out")
+    await setPlayerFlag(db, playerId, { injuryOverride: on ? "out" : null });
 
   await reproject();
   revalidatePath("/players");
@@ -28,7 +29,7 @@ export async function toggleFlag(playerId: number, field: FlagField, on: boolean
 export async function setBoost(playerId: number, pct: number) {
   if (!Number.isFinite(playerId)) return;
   const clamped = Math.max(-50, Math.min(50, Math.round(pct) || 0));
-  setPlayerFlag(db, playerId, { boostPct: clamped });
+  await setPlayerFlag(db, playerId, { boostPct: clamped });
   await reproject();
   revalidatePath("/players");
   revalidatePath("/");
@@ -36,7 +37,7 @@ export async function setBoost(playerId: number, pct: number) {
 
 export async function clearFlags(playerId: number) {
   if (!Number.isFinite(playerId)) return;
-  clearPlayerFlag(db, playerId);
+  await clearPlayerFlag(db, playerId);
   await reproject();
   revalidatePath("/players");
   revalidatePath("/");

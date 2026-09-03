@@ -50,37 +50,37 @@ const sOrNull = (v: string) => {
   return t ? t : null;
 };
 
-function main() {
+async function main() {
   const raw = readFileSync(CSV_PATH, "utf8");
   const rows = parse(raw, { columns: true, skip_empty_lines: true, trim: true }) as Row[];
   console.log(`parsed ${rows.length} rows from ${CSV_PATH}`);
 
-  const { db, sqlite } = createDb();
+  const { db, client } = createDb();
 
   // Matchday
-  db.insert(schema.matchdays)
+  await db
+    .insert(schema.matchdays)
     .values({ ...MATCHDAY, isCurrent: true })
     .onConflictDoUpdate({
       target: schema.matchdays.id,
       set: { number: MATCHDAY.number, label: MATCHDAY.label, isCurrent: true },
-    })
-    .run();
+    });
 
   // Real teams (distinct)
   const teams = new Map<string, string>();
   for (const r of rows) if (r.team_abbr) teams.set(r.team_abbr, r.team_name || r.team_abbr);
   for (const [abbr, name] of teams) {
-    db.insert(schema.realTeams)
+    await db
+      .insert(schema.realTeams)
       .values({ abbr, name })
-      .onConflictDoUpdate({ target: schema.realTeams.abbr, set: { name } })
-      .run();
+      .onConflictDoUpdate({ target: schema.realTeams.abbr, set: { name } });
   }
 
   // Players + snapshots
   let players = 0;
   let snapshots = 0;
   let skipped = 0;
-  const insertAll = sqlite.transaction(() => {
+  await db.transaction(async (tx) => {
     for (const r of rows) {
       const id = Number(r.id);
       const position = r.position?.trim() as PlayerPosition;
@@ -89,7 +89,8 @@ function main() {
         continue;
       }
 
-      db.insert(schema.players)
+      await tx
+        .insert(schema.players)
         .values({
           id,
           firstName: r.first_name?.trim() ?? "",
@@ -105,8 +106,7 @@ function main() {
             position,
             realTeamAbbr: r.team_abbr,
           },
-        })
-        .run();
+        });
       players++;
 
       const snap = {
@@ -123,17 +123,16 @@ function main() {
         label: sOrNull(r.label),
         source: "csv",
       };
-      db.insert(schema.playerSnapshots)
+      await tx
+        .insert(schema.playerSnapshots)
         .values(snap)
         .onConflictDoUpdate({
           target: [schema.playerSnapshots.playerId, schema.playerSnapshots.matchdayId],
           set: snap,
-        })
-        .run();
+        });
       snapshots++;
     }
   });
-  insertAll();
 
   // Seed the 3 fantasy teams (only if absent — don't clobber later tuning).
   const seedTeams = [
@@ -142,10 +141,10 @@ function main() {
     { id: 3, name: "Aggressive", strategy: "aggressive" as const, riskK: 0.6 },
   ];
   for (const t of seedTeams) {
-    db.insert(schema.fantasyTeams)
+    await db
+      .insert(schema.fantasyTeams)
       .values({ ...t, budget: 100 })
-      .onConflictDoNothing()
-      .run();
+      .onConflictDoNothing();
   }
 
   // Default settings (only if absent).
@@ -162,16 +161,19 @@ function main() {
     projectionModel: {}, // overrides on top of DEFAULT_MODEL_PARAMS; see src/lib/projections/model.ts
   };
   for (const [key, value] of Object.entries(seedSettings)) {
-    db.insert(schema.settings)
+    await db
+      .insert(schema.settings)
       .values({ key, value: JSON.stringify(value) })
-      .onConflictDoNothing()
-      .run();
+      .onConflictDoNothing();
   }
 
-  sqlite.close();
+  client.close();
   console.log(
     `done: ${teams.size} teams, ${players} players, ${snapshots} snapshots, ${skipped} skipped`,
   );
 }
 
-main();
+main().catch((e) => {
+  console.error(e instanceof Error ? e.message : e);
+  process.exit(1);
+});

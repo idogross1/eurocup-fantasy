@@ -7,7 +7,7 @@ import { optimizeAllTeams } from "../src/lib/optimizer/run";
 
 /** Build all 3 fantasy teams for the current matchday. Usage: npm run optimize [matchdayId] */
 async function main() {
-  const { db, sqlite } = createDb();
+  const { db, client } = createDb();
 
   let matchdayId = Number(process.argv[2]);
   if (!Number.isFinite(matchdayId)) {
@@ -60,7 +60,7 @@ async function main() {
     console.log();
   }
 
-  sqlite.close();
+  client.close();
 }
 
 main();

@@ -17,7 +17,7 @@ export async function setApplied(formData: FormData) {
   const id = Number(formData.get("id"));
   const applied = formData.get("applied") === "true";
   if (Number.isFinite(id)) {
-    db.update(schema.trades).set({ applied }).where(eq(schema.trades.id, id)).run();
+    await db.update(schema.trades).set({ applied }).where(eq(schema.trades.id, id));
   }
   revalidatePath("/trades");
 }
