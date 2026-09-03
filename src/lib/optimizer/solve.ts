@@ -215,17 +215,34 @@ export function solveTeam(
     binaries.push(xName);
   }
 
-  const solution = solve(
-    { direction: "maximize", objective: "score", constraints, variables, binaries },
-    {
-      // MILP with ~250 binaries: accept within 1% of the LP optimum so branch
-      // and cut converges in well under a second instead of hitting maxIterations.
-      tolerance: 0.01,
+  // MILP with ~250 binaries and heavy price symmetry in the preseason pool.
+  // Branch & cut can crawl on the floor objective for some leagues, so accept a
+  // solution within `tolerance` of the LP optimum and loosen it on a timeout —
+  // a few % of ~200 projected points is imperceptible, and the integer gap
+  // between candidate rosters is far smaller than that in practice.
+  const model = {
+    direction: "maximize" as const,
+    objective: "score",
+    constraints,
+    variables,
+    binaries,
+  };
+  const budget = opts.timeoutMs ?? 15_000;
+  let solution = solve(model, {
+    tolerance: 0.02,
+    maxIterations: 500_000,
+    maxPivots: 100_000,
+    timeout: budget,
+  });
+  for (const tol of [0.06, 0.15]) {
+    if (solution.status === "optimal") break;
+    solution = solve(model, {
+      tolerance: tol,
       maxIterations: 500_000,
       maxPivots: 100_000,
-      timeout: opts.timeoutMs ?? 20_000,
-    },
-  );
+      timeout: budget,
+    });
+  }
 
   if (solution.status !== "optimal") {
     return {

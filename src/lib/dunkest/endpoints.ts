@@ -1,5 +1,5 @@
 import {
-  EUROCUP_LEAGUE_ID,
+  LEAGUE_ID,
   GAME_ID,
   GAME_MODE_CONTEST,
   type DunkestClient,
@@ -22,7 +22,7 @@ function unwrap<T>(res: unknown): T {
   return res as T;
 }
 
-export function endpoints(client: DunkestClient, leagueId = EUROCUP_LEAGUE_ID) {
+export function endpoints(client: DunkestClient, leagueId = LEAGUE_ID) {
   return {
     gameConfig: () => client.get<unknown>(`/games/${GAME_ID}/config`).then((r) => unwrap(r)),
 

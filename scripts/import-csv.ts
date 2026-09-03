@@ -6,6 +6,7 @@ import { resolve } from "node:path";
 
 import { runBatched } from "../src/db/batch";
 import { createDb, schema } from "../src/db/connection";
+import { seedBaseData } from "../src/db/seed";
 import type { PlayerPosition } from "../src/db/schema";
 
 /**
@@ -142,38 +143,7 @@ async function main() {
   }
   await runBatched(db, stmts);
 
-  // Seed the 3 fantasy teams (only if absent — don't clobber later tuning).
-  const seedTeams = [
-    { id: 1, name: "Safe", strategy: "safe" as const, riskK: 0.6 },
-    { id: 2, name: "Balanced", strategy: "balanced" as const, riskK: 0 },
-    { id: 3, name: "Aggressive", strategy: "aggressive" as const, riskK: 0.6 },
-  ];
-  for (const t of seedTeams) {
-    await db
-      .insert(schema.fantasyTeams)
-      .values({ ...t, budget: 100 })
-      .onConflictDoNothing();
-  }
-
-  // Default settings (only if absent).
-  const seedSettings: Record<string, unknown> = {
-    overlapCap: 6,
-    teamCapPerRealTeam: 6,
-    rosterSize: 11,
-    positionCounts: { Guard: 4, Forward: 4, Center: 2, "Head Coach": 1 },
-    captainMultiplier: 2,
-    benchWeight: 0.5,
-    contrarianWeight: 0.2, // aggressive team: value -= contrarianWeight * ownership%
-    turnBalancePenalty: 6, // points/slot penalty for <minPerTurn outfielders on a game-day
-    minPerTurn: 5,
-    projectionModel: {}, // overrides on top of DEFAULT_MODEL_PARAMS; see src/lib/projections/model.ts
-  };
-  for (const [key, value] of Object.entries(seedSettings)) {
-    await db
-      .insert(schema.settings)
-      .values({ key, value: JSON.stringify(value) })
-      .onConflictDoNothing();
-  }
+  await seedBaseData(db);
 
   client.close();
   console.log(

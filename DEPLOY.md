@@ -63,6 +63,44 @@ fresh prices/injuries/rosters, reprojects, and rebuilds the 3 optimiser teams.
 `CRON_SECRET` gates it (Vercel sends it as a Bearer token) so it isn't a public
 refresh button. Trigger it by hand any time from **Settings → Sync now**.
 
+## Add a second league (EuroLeague)
+
+Same codebase, its own database and Vercel project. `LEAGUE_ID` selects the
+competition: `11` = EuroCup (default), `10` = EuroLeague.
+
+```sh
+turso db create euroleague-fantasy
+turso db show euroleague-fantasy --url
+turso db tokens create euroleague-fantasy
+```
+
+Seed it (no CSV for EuroLeague — sync pulls everything live):
+
+```sh
+export LEAGUE_ID=10
+export DATABASE_URL='libsql://euroleague-fantasy-…'
+export DATABASE_AUTH_TOKEN='…'
+export DUNKEST_TOKEN='…'          # same account/token as EuroCup
+
+npm run db:migrate
+npm run seed                      # 3 optimiser teams + default settings
+npm run sync                      # live pool + your EuroLeague rosters
+```
+
+In Vercel: **Add New → Project → import the same `eurocup-fantasy` repo again**
+(a second project). Set env vars for it:
+
+| Name | Value |
+|---|---|
+| `LEAGUE_ID` | `10` |
+| `DATABASE_URL` | the euroleague-fantasy Turso URL |
+| `DATABASE_AUTH_TOKEN` | its token |
+| `DUNKEST_TOKEN` | same as EuroCup |
+| `CRON_SECRET` | a fresh `openssl rand -hex 32` |
+
+Deploy. One `git push` now redeploys both projects; each has its own daily
+sync cron and its own data.
+
 ## Notes
 
 - The token can expire; when a sync fails with a 401, log into the fantasy site

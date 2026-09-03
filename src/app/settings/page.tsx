@@ -1,5 +1,6 @@
 import { db, schema } from "@/db";
 import { DUNKEST_TOKEN_KEY, getLastSync, getSetting } from "@/lib/kv";
+import { LEAGUE } from "@/lib/league";
 
 import { RebuildBanner } from "../rebuild-banner";
 import { clearToken, saveMapping, saveToken, saveTuning } from "./actions";
@@ -172,8 +173,8 @@ export default async function SettingsPage() {
         <section className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--panel)] p-5">
           <h2 className="font-medium">Team mapping</h2>
           <p className="text-sm text-[var(--muted)]">
-            Which of your real EuroCup teams should be compared against each optimizer strategy
-            (drives trade suggestions).
+            Which of your real {LEAGUE.shortName} teams should be compared against each optimizer
+            strategy (drives trade suggestions).
           </p>
           <div className="space-y-2">
             {syncedTeams.map((st) => (

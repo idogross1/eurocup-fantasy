@@ -13,6 +13,7 @@
     "db:studio": "drizzle-kit studio",
     "db:reset": "tsx scripts/migrate.ts --reset",
     "import:csv": "tsx scripts/import-csv.ts",
+    "seed": "tsx scripts/seed.ts",
     "project": "tsx scripts/project.ts",
     "optimize": "tsx scripts/optimize.ts",
     "sync": "tsx scripts/sync.ts",

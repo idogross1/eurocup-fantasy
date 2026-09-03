@@ -4,6 +4,7 @@ import { runBatched } from "@/db/batch";
 import { schema, type Db } from "@/db/connection";
 import type { PlayerPosition } from "@/db/schema";
 import { setSetting } from "@/lib/kv";
+import { LEAGUE } from "@/lib/league";
 
 import { makeClient } from "./client";
 import { endpoints, fetchAllPlayers } from "./endpoints";
@@ -84,7 +85,7 @@ async function insertLogStart(db: DB): Promise<number> {
 }
 
 async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
-  const leagueId = opts.leagueId ?? 11;
+  const leagueId = opts.leagueId ?? LEAGUE.id;
   const gameMode = opts.gameMode ?? 1;
   const api = endpoints(makeClient(opts.token), leagueId);
 

@@ -1,15 +1,18 @@
 /**
- * Thin client for the private Dunkest REST API that powers EuroCup Fantasy
- * Challenge. Read-only — we only pull the account owner's own data. Endpoints,
- * fields and IDs are undocumented and may change without notice, so parsing
- * everywhere is defensive.
+ * Thin client for the private Dunkest REST API that powers the EuroLeague /
+ * EuroCup Fantasy Challenge. Read-only — we only pull the account owner's own
+ * data. Endpoints, fields and IDs are undocumented and may change without
+ * notice, so parsing everywhere is defensive.
  *
  * See euroleaguefantasyapicontext.md for the reverse-engineering notes.
  */
 
+import { LEAGUE } from "@/lib/league";
+
 export const DUNKEST_BASE = "https://fantaking-api.dunkest.com/api/v1";
 
-export const EUROCUP_LEAGUE_ID = 11;
+/** Configured competition for this instance (11 = EuroCup, 10 = EuroLeague). */
+export const LEAGUE_ID = LEAGUE.id;
 export const GAME_MODE_CONTEST = 1;
 export const GAME_ID = 7;
 
