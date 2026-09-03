@@ -1,5 +1,6 @@
-import { and, eq, ne, sql } from "drizzle-orm";
+import { and, eq, inArray, ne, sql } from "drizzle-orm";
 
+import { runBatched } from "@/db/batch";
 import { schema, type Db } from "@/db/connection";
 import type { PlayerPosition } from "@/db/schema";
 import { setSetting } from "@/lib/kv";
@@ -113,35 +114,39 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
   // round state for trade-window advice (see src/lib/trades/window.ts)
   await setSetting(db, "currentRound", { number: roundNumber, startedAt: roundStartedAt });
 
-  // real teams
-  let teamsUpserted = 0;
-  for (const t of lc.teams ?? []) {
-    if (!t.abbreviation) continue;
-    await db
-      .insert(schema.realTeams)
-      .values({ abbr: t.abbreviation, name: t.name ?? t.abbreviation })
-      .onConflictDoUpdate({ target: schema.realTeams.abbr, set: { name: t.name ?? t.abbreviation } });
-    teamsUpserted += 1;
-  }
-
-  // player pool -> players + player_snapshots (source 'api')
+  // real teams (from league config + anything new in the player pool)
   const players = await fetchAllPlayers(api, plId, mdId);
+  const realTeamNames = new Map<string, string>();
+  for (const t of lc.teams ?? []) {
+    if (t.abbreviation) realTeamNames.set(t.abbreviation, t.name ?? t.abbreviation);
+  }
+  for (const p of players) {
+    const a = p.team?.abbreviation;
+    if (a && !realTeamNames.has(a)) realTeamNames.set(a, p.team?.name ?? a);
+  }
+  const teamsUpserted = realTeamNames.size;
+  await runBatched(
+    db,
+    [...realTeamNames].map(([abbr, name]) =>
+      db
+        .insert(schema.realTeams)
+        .values({ abbr, name })
+        .onConflictDoUpdate({ target: schema.realTeams.abbr, set: { name } }),
+    ),
+  );
+
+  // player pool -> players + player_snapshots (source 'api'), batched
   let playersUpserted = 0;
   const seenPlayerIds = new Set<number>();
-  await db.transaction(async (tx) => {
-    for (const p of players) {
-      const position = resolvePosition(p);
-      const abbr = p.team?.abbreviation;
-      if (!position || !abbr) continue;
-      seenPlayerIds.add(p.id);
+  const playerStmts: Parameters<typeof runBatched>[1] = [];
+  for (const p of players) {
+    const position = resolvePosition(p);
+    const abbr = p.team?.abbreviation;
+    if (!position || !abbr) continue;
+    seenPlayerIds.add(p.id);
 
-      // ensure the real team exists even if it wasn't in lc.teams
-      await tx
-        .insert(schema.realTeams)
-        .values({ abbr, name: p.team?.name ?? abbr })
-        .onConflictDoNothing();
-
-      await tx
+    playerStmts.push(
+      db
         .insert(schema.players)
         .values({
           id: p.id,
@@ -158,33 +163,36 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
             position,
             realTeamAbbr: abbr,
           },
-        });
+        }),
+    );
 
-      const snap = {
-        playerId: p.id,
-        matchdayId: mdId,
-        quotation: num(p.quotation, 0),
-        avgPts: num(p.avg_pts, 0),
-        popularity: num(p.popularity, 0),
-        isInjured: Boolean(p.is_injured),
-        probabilityOfPlaying: num(p.probability_of_playing, 1),
-        opponentAbbr: p.opponent?.abbreviation ?? null,
-        roundNumber: p.round?.number ?? null,
-        startedFromBench:
-          typeof p.started_from_bench === "boolean" ? p.started_from_bench : null,
-        label: p.label ?? null,
-        source: "api",
-      };
-      await tx
+    const snap = {
+      playerId: p.id,
+      matchdayId: mdId,
+      quotation: num(p.quotation, 0),
+      avgPts: num(p.avg_pts, 0),
+      popularity: num(p.popularity, 0),
+      isInjured: Boolean(p.is_injured),
+      probabilityOfPlaying: num(p.probability_of_playing, 1),
+      opponentAbbr: p.opponent?.abbreviation ?? null,
+      roundNumber: p.round?.number ?? null,
+      startedFromBench:
+        typeof p.started_from_bench === "boolean" ? p.started_from_bench : null,
+      label: p.label ?? null,
+      source: "api",
+    };
+    playerStmts.push(
+      db
         .insert(schema.playerSnapshots)
         .values(snap)
         .onConflictDoUpdate({
           target: [schema.playerSnapshots.playerId, schema.playerSnapshots.matchdayId],
           set: snap,
-        });
-      playersUpserted += 1;
-    }
-  });
+        }),
+    );
+    playersUpserted += 1;
+  }
+  await runBatched(db, playerStmts);
 
   // Prune players that dropped out of the live pool (cut, transferred, left off
   // the squad). Their stale snapshot/projection would otherwise let the
@@ -200,26 +208,24 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
       .map((r) => r.playerId)
       .filter((id) => !seenPlayerIds.has(id));
     if (staleIds.length > 0) {
-      await db.transaction(async (tx) => {
-        for (const id of staleIds) {
-          await tx
-            .delete(schema.projections)
-            .where(
-              and(
-                eq(schema.projections.playerId, id),
-                eq(schema.projections.matchdayId, mdId),
-              ),
-            );
-          await tx
-            .delete(schema.playerSnapshots)
-            .where(
-              and(
-                eq(schema.playerSnapshots.playerId, id),
-                eq(schema.playerSnapshots.matchdayId, mdId),
-              ),
-            );
-        }
-      });
+      await runBatched(db, [
+        db
+          .delete(schema.projections)
+          .where(
+            and(
+              inArray(schema.projections.playerId, staleIds),
+              eq(schema.projections.matchdayId, mdId),
+            ),
+          ),
+        db
+          .delete(schema.playerSnapshots)
+          .where(
+            and(
+              inArray(schema.playerSnapshots.playerId, staleIds),
+              eq(schema.playerSnapshots.matchdayId, mdId),
+            ),
+          ),
+      ]);
       prunedPlayers = staleIds.length;
     }
   }
@@ -227,21 +233,23 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
   // your fantasy teams + their real rosters
   const fts = await api.fantasyTeams(gameMode);
   const syncedTeams: SyncSummary["syncedTeams"] = [];
-  const existingMappedRows = await db
-    .select({ id: schema.syncedTeams.mappedFantasyTeamId })
+  const priorSyncedTeams = await db
+    .select({
+      dunkestTeamId: schema.syncedTeams.dunkestTeamId,
+      mapped: schema.syncedTeams.mappedFantasyTeamId,
+    })
     .from(schema.syncedTeams);
+  const priorMapByTeam = new Map(priorSyncedTeams.map((r) => [r.dunkestTeamId, r.mapped]));
   const existingMapped = new Set(
-    existingMappedRows.map((r) => r.id).filter((v): v is number => v != null),
+    priorSyncedTeams.map((r) => r.mapped).filter((v): v is number => v != null),
   );
   let nextAutoMap = [1, 2, 3].find((id) => !existingMapped.has(id)) ?? null;
 
+  const knownPlayerRows = await db.select({ id: schema.players.id }).from(schema.players);
+  const knownPlayerIds = new Set(knownPlayerRows.map((r) => r.id));
+
   for (const ft of fts.data ?? []) {
-    const priorMapRow = await db
-      .select({ id: schema.syncedTeams.mappedFantasyTeamId })
-      .from(schema.syncedTeams)
-      .where(eq(schema.syncedTeams.dunkestTeamId, ft.id))
-      .get();
-    let mapped = priorMapRow?.id ?? null;
+    let mapped = priorMapByTeam.get(ft.id) ?? null;
     if (mapped == null && nextAutoMap != null) {
       mapped = nextAutoMap;
       existingMapped.add(nextAutoMap);
@@ -273,28 +281,28 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
 
     const roster = await api.roster(ft.id, mdId);
     const rosterPlayers = roster.data?.players ?? [];
-    const knownPlayerRows = await db.select({ id: schema.players.id }).from(schema.players);
-    const knownPlayerIds = new Set(knownPlayerRows.map((r) => r.id));
-    await db.transaction(async (tx) => {
-      await tx
+    const rosterSyncedAt = new Date().toISOString();
+    await runBatched(db, [
+      db
         .delete(schema.syncedRosterEntries)
-        .where(eq(schema.syncedRosterEntries.dunkestTeamId, ft.id));
-      for (const rp of rosterPlayers) {
-        if (!knownPlayerIds.has(rp.id)) continue; // FK safety if roster has a player not in the pool
-        await tx
-          .insert(schema.syncedRosterEntries)
-          .values({
-            dunkestTeamId: ft.id,
-            matchdayId: mdId,
-            playerId: rp.id,
-            slot: slotFrom(rp),
-            isCaptain: isCaptainFlag(rp),
-            formationId: roster.data?.formation_id ?? null,
-            syncedAt: new Date().toISOString(),
-          })
-          .onConflictDoNothing();
-      }
-    });
+        .where(eq(schema.syncedRosterEntries.dunkestTeamId, ft.id)),
+      ...rosterPlayers
+        .filter((rp) => knownPlayerIds.has(rp.id)) // FK safety if roster has a player not in the pool
+        .map((rp) =>
+          db
+            .insert(schema.syncedRosterEntries)
+            .values({
+              dunkestTeamId: ft.id,
+              matchdayId: mdId,
+              playerId: rp.id,
+              slot: slotFrom(rp),
+              isCaptain: isCaptainFlag(rp),
+              formationId: roster.data?.formation_id ?? null,
+              syncedAt: rosterSyncedAt,
+            })
+            .onConflictDoNothing(),
+        ),
+    ]);
 
     // history snapshot for this matchday (roster value from the snapshot prices)
     const rosterValueRow = await db

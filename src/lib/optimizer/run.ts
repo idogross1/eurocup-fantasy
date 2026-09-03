@@ -1,5 +1,6 @@
 import { and, eq } from "drizzle-orm";
 
+import { runBatched } from "@/db/batch";
 import { schema, type Db } from "@/db/connection";
 import { setSetting } from "@/lib/kv";
 
@@ -142,9 +143,10 @@ export async function optimizeAllTeams(db: DB, matchdayId: number): Promise<Opti
 }
 
 async function persistRosters(db: DB, matchdayId: number, results: TeamResult[]) {
-  await db.transaction(async (tx) => {
-    for (const res of results) {
-      await tx
+  const stmts: Parameters<typeof runBatched>[1] = [];
+  for (const res of results) {
+    stmts.push(
+      db
         .delete(schema.rosterEntries)
         .where(
           and(
@@ -152,10 +154,12 @@ async function persistRosters(db: DB, matchdayId: number, results: TeamResult[])
             eq(schema.rosterEntries.matchdayId, matchdayId),
             eq(schema.rosterEntries.source, "optimizer"),
           ),
-        );
-      if (res.status !== "optimal") continue;
-      for (const p of res.players) {
-        await tx.insert(schema.rosterEntries).values({
+        ),
+    );
+    if (res.status !== "optimal") continue;
+    for (const p of res.players) {
+      stmts.push(
+        db.insert(schema.rosterEntries).values({
           fantasyTeamId: res.spec.teamId,
           matchdayId,
           playerId: p.id,
@@ -163,8 +167,9 @@ async function persistRosters(db: DB, matchdayId: number, results: TeamResult[])
           isCaptain: p.isCaptain,
           formationId: res.formationId,
           source: "optimizer",
-        });
-      }
+        }),
+      );
     }
-  });
+  }
+  await runBatched(db, stmts);
 }

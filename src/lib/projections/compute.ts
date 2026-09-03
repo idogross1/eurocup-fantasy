@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 
+import { runBatched } from "@/db/batch";
 import { schema, type Db } from "@/db/connection";
 import type { PlayerPosition } from "@/db/schema";
 import { getSetting } from "@/lib/kv";
@@ -143,12 +144,14 @@ export async function computeProjections(
     };
   });
 
-  await db.transaction(async (tx) => {
-    for (const v of values) {
+  const now = new Date().toISOString();
+  await runBatched(
+    db,
+    values.map((v) => {
       const { _name, _position, ...record } = v;
       void _name;
       void _position;
-      await tx
+      return db
         .insert(schema.projections)
         .values(record)
         .onConflictDoUpdate({
@@ -159,11 +162,11 @@ export async function computeProjections(
             ceiling: record.ceiling,
             sigma: record.sigma,
             model: record.model,
-            computedAt: new Date().toISOString(),
+            computedAt: now,
           },
         });
-    }
-  });
+    }),
+  );
 
   const top = [...values]
     .sort((a, b) => b.mean - a.mean)

@@ -4,6 +4,7 @@ import { parse } from "csv-parse/sync";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
+import { runBatched } from "../src/db/batch";
 import { createDb, schema } from "../src/db/connection";
 import type { PlayerPosition } from "../src/db/schema";
 
@@ -69,27 +70,31 @@ async function main() {
   // Real teams (distinct)
   const teams = new Map<string, string>();
   for (const r of rows) if (r.team_abbr) teams.set(r.team_abbr, r.team_name || r.team_abbr);
-  for (const [abbr, name] of teams) {
-    await db
-      .insert(schema.realTeams)
-      .values({ abbr, name })
-      .onConflictDoUpdate({ target: schema.realTeams.abbr, set: { name } });
-  }
+  await runBatched(
+    db,
+    [...teams].map(([abbr, name]) =>
+      db
+        .insert(schema.realTeams)
+        .values({ abbr, name })
+        .onConflictDoUpdate({ target: schema.realTeams.abbr, set: { name } }),
+    ),
+  );
 
-  // Players + snapshots
+  // Players + snapshots (batched)
   let players = 0;
   let snapshots = 0;
   let skipped = 0;
-  await db.transaction(async (tx) => {
-    for (const r of rows) {
-      const id = Number(r.id);
-      const position = r.position?.trim() as PlayerPosition;
-      if (!Number.isFinite(id) || !VALID_POSITIONS.includes(position) || !r.team_abbr) {
-        skipped++;
-        continue;
-      }
+  const stmts: Parameters<typeof runBatched>[1] = [];
+  for (const r of rows) {
+    const id = Number(r.id);
+    const position = r.position?.trim() as PlayerPosition;
+    if (!Number.isFinite(id) || !VALID_POSITIONS.includes(position) || !r.team_abbr) {
+      skipped++;
+      continue;
+    }
 
-      await tx
+    stmts.push(
+      db
         .insert(schema.players)
         .values({
           id,
@@ -106,33 +111,36 @@ async function main() {
             position,
             realTeamAbbr: r.team_abbr,
           },
-        });
-      players++;
+        }),
+    );
+    players++;
 
-      const snap = {
-        playerId: id,
-        matchdayId: MATCHDAY.id,
-        quotation: nOrNull(r.quotation) ?? 0,
-        avgPts: nOrNull(r.avg_pts) ?? 0,
-        popularity: nOrNull(r.popularity) ?? 0,
-        isInjured: bool(r.is_injured),
-        probabilityOfPlaying: nOrNull(r.probability_of_playing) ?? 1,
-        opponentAbbr: sOrNull(r.opponent_abbr),
-        roundNumber: nOrNull(r.round_number),
-        startedFromBench: r.started_from_bench?.trim() ? bool(r.started_from_bench) : null,
-        label: sOrNull(r.label),
-        source: "csv",
-      };
-      await tx
+    const snap = {
+      playerId: id,
+      matchdayId: MATCHDAY.id,
+      quotation: nOrNull(r.quotation) ?? 0,
+      avgPts: nOrNull(r.avg_pts) ?? 0,
+      popularity: nOrNull(r.popularity) ?? 0,
+      isInjured: bool(r.is_injured),
+      probabilityOfPlaying: nOrNull(r.probability_of_playing) ?? 1,
+      opponentAbbr: sOrNull(r.opponent_abbr),
+      roundNumber: nOrNull(r.round_number),
+      startedFromBench: r.started_from_bench?.trim() ? bool(r.started_from_bench) : null,
+      label: sOrNull(r.label),
+      source: "csv",
+    };
+    stmts.push(
+      db
         .insert(schema.playerSnapshots)
         .values(snap)
         .onConflictDoUpdate({
           target: [schema.playerSnapshots.playerId, schema.playerSnapshots.matchdayId],
           set: snap,
-        });
-      snapshots++;
-    }
-  });
+        }),
+    );
+    snapshots++;
+  }
+  await runBatched(db, stmts);
 
   // Seed the 3 fantasy teams (only if absent — don't clobber later tuning).
   const seedTeams = [
