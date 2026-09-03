@@ -18,14 +18,14 @@ import * as schema from "./schema";
 export type Db = LibSQLDatabase<typeof schema>;
 
 export function resolveDbUrl(): string {
-  const raw = process.env.DATABASE_URL ?? "file:./data/eurocup.sqlite";
+  const raw = (process.env.DATABASE_URL ?? "file:./data/eurocup.sqlite").trim();
   if (!raw.startsWith("file:")) return raw;
 
-  // normalise a relative file: URL to an absolute path and ensure the dir exists
-  const rel = raw.slice("file:".length);
+  // normalise a relative file: URL to an absolute file:// URL and ensure the dir exists
+  const rel = raw.slice("file:".length).replace(/^\/+/, "");
   const abs = resolve(process.cwd(), rel);
   if (!existsSync(dirname(abs))) mkdirSync(dirname(abs), { recursive: true });
-  return `file:${abs}`;
+  return `file://${abs}`;
 }
 
 export function createDb(): { db: Db; client: Client } {
