@@ -1,0 +1,73 @@
+# Deploy: Turso + Vercel
+
+## 1. Create the Turso database
+
+Install the CLI and sign up (free):
+
+```sh
+curl -sSfL https://get.tur.so/install.sh | bash
+turso auth signup          # opens the browser
+turso db create eurocup-fantasy
+```
+
+Grab the two values you'll need:
+
+```sh
+turso db show eurocup-fantasy --url        # -> DATABASE_URL  (libsql://…)
+turso db tokens create eurocup-fantasy     # -> DATABASE_AUTH_TOKEN
+```
+
+## 2. Seed the remote database (run locally, once)
+
+Point the scripts at Turso and run the same bootstrap you ran locally:
+
+```sh
+export DATABASE_URL='libsql://…'            # from step 1
+export DATABASE_AUTH_TOKEN='…'              # from step 1
+export DUNKEST_TOKEN='…'                    # your flutter.authToken
+
+npm run db:migrate      # create the tables
+npm run import:csv      # 469-player CSV bootstrap
+npm run project         # initial projections
+npm run sync            # pull live pool + your 3 rosters, rebuild teams
+```
+
+(Unset those exports afterwards so local dev goes back to the file DB.)
+
+## 3. Deploy to Vercel
+
+```sh
+npm i -g vercel
+vercel link                # pick / create the project
+```
+
+Add the environment variables (Production + Preview):
+
+```sh
+vercel env add DATABASE_URL          # libsql://…
+vercel env add DATABASE_AUTH_TOKEN   # …
+vercel env add DUNKEST_TOKEN         # …
+vercel env add CRON_SECRET           # openssl rand -hex 32
+```
+
+Then:
+
+```sh
+vercel --prod
+```
+
+## 4. What runs automatically
+
+`vercel.json` registers a daily cron: `GET /api/sync` at 05:00 UTC. It pulls
+fresh prices/injuries/rosters, reprojects, and rebuilds the 3 optimiser teams.
+`CRON_SECRET` gates it (Vercel sends it as a Bearer token) so it isn't a public
+refresh button. Trigger it by hand any time from **Settings → Sync now**.
+
+## Notes
+
+- The token can expire; when a sync fails with a 401, log into the fantasy site
+  again, copy a fresh `flutter.authToken`, and update `DUNKEST_TOKEN` in Vercel
+  (or paste it on the Settings page — the DB value is the fallback).
+- Schema changes: add a migration with `npm run db:generate`, then rerun
+  `npm run db:migrate` against `DATABASE_URL=libsql://…`.
+- Local dev is unchanged: `npm run dev` uses `data/eurocup.sqlite`.
