@@ -12,33 +12,29 @@ async function reproject() {
   if (md) await computeProjections(db, md.id);
 }
 
-export async function toggleFlag(formData: FormData) {
-  const playerId = Number(formData.get("playerId"));
-  const field = String(formData.get("field")); // 'lock' | 'exclude' | 'out'
-  const on = formData.get("on") === "true";
-  if (!Number.isFinite(playerId)) return;
+export type FlagField = "lock" | "exclude" | "out";
 
+export async function toggleFlag(playerId: number, field: FlagField, on: boolean) {
+  if (!Number.isFinite(playerId)) return;
   if (field === "lock") setPlayerFlag(db, playerId, { lock: on });
   else if (field === "exclude") setPlayerFlag(db, playerId, { exclude: on });
-  else if (field === "out")
-    setPlayerFlag(db, playerId, { injuryOverride: on ? "out" : null });
+  else if (field === "out") setPlayerFlag(db, playerId, { injuryOverride: on ? "out" : null });
 
   await reproject();
   revalidatePath("/players");
   revalidatePath("/");
 }
 
-export async function setBoost(formData: FormData) {
-  const playerId = Number(formData.get("playerId"));
-  const pct = Math.max(-50, Math.min(50, Number(formData.get("pct")) || 0));
+export async function setBoost(playerId: number, pct: number) {
   if (!Number.isFinite(playerId)) return;
-  setPlayerFlag(db, playerId, { boostPct: pct });
+  const clamped = Math.max(-50, Math.min(50, Math.round(pct) || 0));
+  setPlayerFlag(db, playerId, { boostPct: clamped });
   await reproject();
   revalidatePath("/players");
+  revalidatePath("/");
 }
 
-export async function clearFlags(formData: FormData) {
-  const playerId = Number(formData.get("playerId"));
+export async function clearFlags(playerId: number) {
   if (!Number.isFinite(playerId)) return;
   clearPlayerFlag(db, playerId);
   await reproject();

@@ -10,6 +10,13 @@ import type { OptimizerPlayer, RosterPlayer, StrategySpec, TeamResult } from "./
 
 const POSITION_COUNTS = { Guard: 4, Forward: 4, Center: 2 } as const;
 
+/**
+ * Tiny reward per credit spent on a roster player. Far too small to override a
+ * real projection gap, but among near-equal rosters it prefers the one that
+ * uses the budget (leftover credits are dead weight).
+ */
+const BUDGET_NUDGE = 0.003;
+
 export type SolveOptions = {
   excludeIds?: Set<number>;
   lockIds?: Set<number>;
@@ -133,7 +140,7 @@ export function solveTeam(
     // gives the LP a unique optimum — dozens of players share an identical
     // price/projection preseason, and that symmetry stalls branch & cut.
     const xVar: Record<string, number> = {
-      score: value + tieBreak(p.id),
+      score: value + tieBreak(p.id) + BUDGET_NUDGE * p.quotation,
       [posConstraint[p.position as Pos]]: 1,
       budget: p.quotation,
       [`team_${p.teamAbbr}`]: 1,
@@ -191,7 +198,7 @@ export function solveTeam(
     const xName = `x_${p.id}`;
     const value = valueById.get(p.id) ?? 0;
     const xVar: Record<string, number> = {
-      score: value,
+      score: value + BUDGET_NUDGE * p.quotation,
       coaches: 1,
       budget: p.quotation,
       [`team_${p.teamAbbr}`]: 1,

@@ -68,6 +68,12 @@ export default async function TeamsPage() {
                 <span>
                   <span className="text-[var(--muted)]">Credits </span>
                   {t.creditsUsed || "—"}/{t.budget}
+                  {t.creditsUsed > 0 && t.budget - t.creditsUsed > 0.05 && (
+                    <span className="text-[var(--muted)]">
+                      {" "}
+                      ({(t.budget - t.creditsUsed).toFixed(1)} free)
+                    </span>
+                  )}
                 </span>
                 <span>
                   <span className="text-[var(--muted)]">Form </span>

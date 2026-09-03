@@ -1,10 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMemo, useState, useTransition } from "react";
 
 import type { PlayerRow } from "@/lib/players";
 
-import { clearFlags, setBoost, toggleFlag } from "./actions";
+import { clearFlags, setBoost, toggleFlag, type FlagField } from "./actions";
+
+const BOOST_STEPS = [-30, -20, -10, 0, 10, 20, 30] as const;
 
 type SortKey =
   | "name"
@@ -40,11 +43,14 @@ export function PlayersTable({ players }: { players: PlayerRow[] }) {
   const isFlagged = (p: PlayerRow) =>
     p.flagLock || p.flagExclude || p.flagBoostPct !== 0 || p.flagInjuryOverride != null;
 
+  const flaggedCount = players.filter(isFlagged).length;
+  const applyFlaggedFilter = flaggedOnly && flaggedCount > 0;
+
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
     let out = players.filter((p) => {
       if (position !== "All" && p.position !== position) return false;
-      if (flaggedOnly && !isFlagged(p)) return false;
+      if (applyFlaggedFilter && !isFlagged(p)) return false;
       if (!q) return true;
       return (
         `${p.firstName} ${p.lastName}`.toLowerCase().includes(q) ||
@@ -77,9 +83,7 @@ export function PlayersTable({ players }: { players: PlayerRow[] }) {
       }
     });
     return out;
-  }, [players, query, position, sortKey, asc, flaggedOnly]);
-
-  const flaggedCount = players.filter(isFlagged).length;
+  }, [players, query, position, sortKey, asc, applyFlaggedFilter]);
 
   function toggleSort(key: SortKey) {
     if (key === sortKey) {
@@ -289,112 +293,75 @@ export function PlayersTable({ players }: { players: PlayerRow[] }) {
   );
 }
 
-function FlagBtn({
-  action,
-  playerId,
-  field,
-  on,
-  active,
-  title,
-  children,
-  danger,
-}: {
-  action: (fd: FormData) => void;
-  playerId: number;
-  field: string;
-  on: boolean;
-  active: boolean;
-  title: string;
-  children: React.ReactNode;
-  danger?: boolean;
-}) {
-  return (
-    <form action={action} className="inline">
-      <input type="hidden" name="playerId" value={playerId} />
-      <input type="hidden" name="field" value={field} />
-      <input type="hidden" name="on" value={String(on)} />
-      <button
-        title={title}
-        className={`h-6 min-w-6 rounded border px-1 text-[11px] font-medium ${
-          active
-            ? danger
-              ? "border-red-500 bg-red-500/20 text-red-300"
-              : "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]"
-            : "border-[var(--border)] bg-[var(--panel-2)] text-[var(--muted)] hover:text-[var(--text)]"
-        }`}
-      >
-        {children}
-      </button>
-    </form>
-  );
-}
-
 function FlagControls({ p }: { p: PlayerRow }) {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+
   const anyFlag =
     p.flagLock || p.flagExclude || p.flagBoostPct !== 0 || p.flagInjuryOverride != null;
+
+  const run = (fn: () => Promise<void>) =>
+    start(async () => {
+      await fn();
+      router.refresh();
+    });
+
+  const btn = (
+    field: FlagField,
+    active: boolean,
+    label: React.ReactNode,
+    title: string,
+    danger = false,
+  ) => (
+    <button
+      disabled={pending}
+      title={title}
+      onClick={() => run(() => toggleFlag(p.id, field, !active))}
+      className={`h-6 min-w-6 rounded border px-1 text-[11px] font-medium disabled:opacity-50 ${
+        active
+          ? danger
+            ? "border-red-500 bg-red-500/20 text-red-300"
+            : "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]"
+          : "border-[var(--border)] bg-[var(--panel-2)] text-[var(--muted)] hover:text-[var(--text)]"
+      }`}
+    >
+      {label}
+    </button>
+  );
+
   return (
-    <div className="flex items-center gap-1">
-      <FlagBtn
-        action={toggleFlag}
-        playerId={p.id}
-        field="out"
-        on={p.flagInjuryOverride !== "out"}
-        active={p.flagInjuryOverride === "out"}
-        title="Injured / out — projection zeroed, optimiser skips"
-        danger
+    <div className={`flex items-center gap-1 ${pending ? "opacity-60" : ""}`}>
+      {btn(
+        "out",
+        p.flagInjuryOverride === "out",
+        "Out",
+        "Injured / out — projection zeroed, optimiser skips",
+        true,
+      )}
+      {btn("exclude", p.flagExclude, "✕", "Exclude from all rosters")}
+      {btn("lock", p.flagLock, "🔒", "Lock into the roster")}
+      <select
+        value={p.flagBoostPct}
+        disabled={pending}
+        title="Nudge this player's projection ±%"
+        onChange={(e) => run(() => setBoost(p.id, Number(e.target.value)))}
+        className="h-6 rounded border border-[var(--border)] bg-[var(--panel-2)] px-1 text-[11px] text-[var(--muted)] disabled:opacity-50"
       >
-        Out
-      </FlagBtn>
-      <FlagBtn
-        action={toggleFlag}
-        playerId={p.id}
-        field="exclude"
-        on={!p.flagExclude}
-        active={p.flagExclude}
-        title="Exclude from all rosters"
-      >
-        ✕
-      </FlagBtn>
-      <FlagBtn
-        action={toggleFlag}
-        playerId={p.id}
-        field="lock"
-        on={!p.flagLock}
-        active={p.flagLock}
-        title="Lock into the roster"
-      >
-        🔒
-      </FlagBtn>
-      <form action={setBoost} className="inline">
-        <input type="hidden" name="playerId" value={p.id} />
-        <input type="hidden" name="pct" value={Math.max(-50, p.flagBoostPct - 10)} />
-        <button
-          title="Fade projection −10%"
-          className="h-6 w-6 rounded border border-[var(--border)] bg-[var(--panel-2)] text-[11px] text-[var(--muted)] hover:text-[var(--text)]"
-        >
-          −
-        </button>
-      </form>
-      <form action={setBoost} className="inline">
-        <input type="hidden" name="playerId" value={p.id} />
-        <input type="hidden" name="pct" value={Math.min(50, p.flagBoostPct + 10)} />
-        <button
-          title="Boost projection +10%"
-          className="h-6 w-6 rounded border border-[var(--border)] bg-[var(--panel-2)] text-[11px] text-[var(--muted)] hover:text-[var(--text)]"
-        >
-          +
-        </button>
-      </form>
+        {BOOST_STEPS.map((s) => (
+          <option key={s} value={s}>
+            {s > 0 ? `+${s}%` : s < 0 ? `${s}%` : "0%"}
+          </option>
+        ))}
+      </select>
       {anyFlag && (
-        <form action={clearFlags} className="inline">
-          <input type="hidden" name="playerId" value={p.id} />
-          <button
-            title="Clear all flags for this player"
-            className="h-6 w-6 rounded border border-transparent text-[11px] text-[var(--muted)] hover:text-red-400"
-          >
-            ⟲
-          </button>
-        </form>
+        <button
+          disabled={pending}
+          title="Clear all flags for this player"
+          onClick={() => run(() => clearFlags(p.id))}
+          className="h-6 w-6 rounded border border-transparent text-[11px] text-[var(--muted)] hover:text-red-400 disabled:opacity-50"
+        >
+          ⟲
+        </button>
       )}
     </div>
   );
