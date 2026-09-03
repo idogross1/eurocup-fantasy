@@ -2,6 +2,7 @@ import Link from "next/link";
 import { sql } from "drizzle-orm";
 
 import { db, schema } from "@/db";
+import { getDashboard, type ActionItem } from "@/lib/dashboard";
 import { getLastSync } from "@/lib/kv";
 import { getCurrentMatchday } from "@/lib/players";
 import { getTeamsForCurrentMatchday } from "@/lib/teams";
@@ -16,10 +17,11 @@ async function counts() {
 }
 
 export default async function Home() {
-  const [{ players, snapshots, teams }, matchday, { teams: teamViews }] = await Promise.all([
+  const [{ players, snapshots, teams }, matchday, { teams: teamViews }, dash] = await Promise.all([
     counts(),
     getCurrentMatchday(),
     getTeamsForCurrentMatchday(),
+    getDashboard(),
   ]);
   const lastSync = getLastSync(db);
   const syncedTeams = await db
@@ -41,8 +43,12 @@ export default async function Home() {
           <h1 className="text-2xl font-semibold">Dashboard</h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
             {matchday
-              ? `Current: ${matchday.label} (Round ${matchday.number})`
+              ? `${matchday.label} (Round ${matchday.number}) · ${dash.windowLabel}`
               : "No matchday loaded"}
+            {dash.roundCountdownDays != null &&
+              (dash.roundCountdownDays > 0
+                ? ` · round starts in ${dash.roundCountdownDays}d`
+                : " · round underway")}
           </p>
         </div>
         <p className="text-xs text-[var(--muted)]">
@@ -77,6 +83,17 @@ export default async function Home() {
           <Stat label="Snapshots" value={snapshots} />
           <Stat label="Real teams" value={teams} />
           <Stat label="Synced teams" value={syncedTeams.length} />
+        </div>
+      )}
+
+      {dash.actions.length > 0 && (
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--panel)] p-4">
+          <h2 className="text-sm font-medium">Needs attention</h2>
+          <ul className="mt-2 space-y-1 text-sm">
+            {dash.actions.map((a, i) => (
+              <ActionRow key={i} a={a} />
+            ))}
+          </ul>
         </div>
       )}
 
@@ -139,6 +156,28 @@ export default async function Home() {
         </Link>
       </div>
     </div>
+  );
+}
+
+function ActionRow({ a }: { a: ActionItem }) {
+  const dot =
+    a.severity === "high" ? "bg-red-400" : a.severity === "med" ? "bg-amber-400" : "bg-[var(--muted)]";
+  const body = (
+    <span className="flex items-center gap-2">
+      <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+      {a.text}
+    </span>
+  );
+  return (
+    <li>
+      {a.href ? (
+        <Link href={a.href} className="hover:text-[var(--accent)]">
+          {body}
+        </Link>
+      ) : (
+        body
+      )}
+    </li>
   );
 }
 

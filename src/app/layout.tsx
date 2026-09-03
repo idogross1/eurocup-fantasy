@@ -29,6 +29,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/planner" className="text-[var(--muted)] hover:text-[var(--text)]">
               Planner
             </Link>
+            <Link href="/history" className="text-[var(--muted)] hover:text-[var(--text)]">
+              History
+            </Link>
             <Link href="/settings" className="text-[var(--muted)] hover:text-[var(--text)]">
               Settings
             </Link>

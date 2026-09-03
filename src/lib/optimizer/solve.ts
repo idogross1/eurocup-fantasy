@@ -19,6 +19,13 @@ export type SolveOptions = {
   timeoutMs?: number;
   /** keep at least (|anchor ∩ pool| − maxChanges) of these players (trade cap) */
   anchor?: { ids: Set<number>; maxChanges: number };
+  /**
+   * Soft penalty (points per missing slot) for having fewer than `minPerTurn`
+   * outfield players with a game on a given turn/game-day. Keeps the roster from
+   * being packed onto one day so you can field a legal five every turn.
+   */
+  turnBalancePenalty?: number;
+  minPerTurn?: number;
 };
 
 /** Per-player value the optimizer maximizes, given the team's strategy. */
@@ -101,6 +108,21 @@ export function solveTeam(
     constraints[`overlap_${g.label}`] = { max: g.cap };
   }
 
+  // turn balance: soft floor of `minPerTurn` outfield players per game-day.
+  // `turnShort_t` slack absorbs any shortfall and is penalised in the objective.
+  const turnPenalty = opts.turnBalancePenalty ?? 0;
+  const minPerTurn = opts.minPerTurn ?? 5;
+  const turnsInPool = [...new Set(nonCoach.map((p) => p.turn).filter((t): t is number => t != null))];
+  const applyTurnBalance = turnPenalty > 0 && turnsInPool.length >= 2;
+  if (applyTurnBalance) {
+    for (const t of turnsInPool) {
+      const available = nonCoach.filter((p) => p.turn === t).length;
+      constraints[`turn_${t}`] = { min: Math.min(minPerTurn, available) };
+      variables[`turnShort_${t}`] = { score: -turnPenalty, [`turn_${t}`]: 1 };
+      // continuous slack in [0, minPerTurn] — not a binary
+    }
+  }
+
   for (const p of nonCoach) {
     const xName = `x_${p.id}`;
     const benchName = `bench_${p.id}`;
@@ -122,6 +144,7 @@ export function solveTeam(
       if (g.ids.has(p.id)) xVar[`overlap_${g.label}`] = 1;
     }
     if (anchorIds.has(p.id)) xVar.anchorKeep = 1;
+    if (applyTurnBalance && p.turn != null) xVar[`turn_${p.turn}`] = 1;
     if (lock.has(p.id)) {
       constraints[`lock_${p.id}`] = { equal: 1 };
       xVar[`lock_${p.id}`] = 1;

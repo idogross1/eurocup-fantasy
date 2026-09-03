@@ -1,4 +1,4 @@
-import { eq, ne } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 
 import { schema } from "@/db/connection";
@@ -258,6 +258,44 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
           .run();
       }
     });
+
+    // history snapshot for this matchday (roster value from the snapshot prices)
+    const rosterValue = db
+      .select({ v: sql<number>`coalesce(sum(${schema.playerSnapshots.quotation}), 0)` })
+      .from(schema.syncedRosterEntries)
+      .innerJoin(
+        schema.playerSnapshots,
+        and(
+          eq(schema.playerSnapshots.playerId, schema.syncedRosterEntries.playerId),
+          eq(schema.playerSnapshots.matchdayId, mdId),
+        ),
+      )
+      .where(
+        and(
+          eq(schema.syncedRosterEntries.dunkestTeamId, ft.id),
+          eq(schema.syncedRosterEntries.matchdayId, mdId),
+        ),
+      )
+      .get()?.v ?? 0;
+
+    const hist = {
+      dunkestTeamId: ft.id,
+      matchdayId: mdId,
+      matchdayNumber: mdNum,
+      globalPosition: ft.position ?? null,
+      matchdayPts: ft.pts ?? null,
+      totalPts: ft.total_pts ?? null,
+      rosterValue: Math.round(rosterValue * 10) / 10,
+      rosterSize: rosterPlayers.length,
+      capturedAt: new Date().toISOString(),
+    };
+    db.insert(schema.teamHistory)
+      .values(hist)
+      .onConflictDoUpdate({
+        target: [schema.teamHistory.dunkestTeamId, schema.teamHistory.matchdayId],
+        set: hist,
+      })
+      .run();
 
     syncedTeams.push({
       id: ft.id,

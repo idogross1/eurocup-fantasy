@@ -233,6 +233,30 @@ export const syncedRosterEntries = sqliteTable(
   ],
 );
 
+/** One row per synced team per matchday — the time series behind /history. */
+export const teamHistory = sqliteTable(
+  "team_history",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    dunkestTeamId: integer("dunkest_team_id")
+      .notNull()
+      .references(() => syncedTeams.dunkestTeamId),
+    matchdayId: integer("matchday_id")
+      .notNull()
+      .references(() => matchdays.id),
+    matchdayNumber: integer("matchday_number").notNull(),
+    globalPosition: integer("global_position"),
+    matchdayPts: real("matchday_pts"),
+    totalPts: real("total_pts"),
+    rosterValue: real("roster_value"), // sum of quotations of the synced roster
+    rosterSize: integer("roster_size"),
+    capturedAt: text("captured_at")
+      .notNull()
+      .default(sql`(current_timestamp)`),
+  },
+  (t) => [uniqueIndex("team_history_team_matchday_idx").on(t.dunkestTeamId, t.matchdayId)],
+);
+
 export const syncLog = sqliteTable("sync_log", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   startedAt: text("started_at")

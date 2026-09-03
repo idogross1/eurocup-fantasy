@@ -3,6 +3,7 @@ import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 
 import { schema } from "@/db/connection";
 import type { PlayerPosition } from "@/db/schema";
+import { getSetting } from "@/lib/kv";
 
 import {
   DEFAULT_MODEL_PARAMS,
@@ -69,12 +70,22 @@ export type ComputeSummary = {
   top: { name: string; position: string; mean: number; floor: number; ceiling: number }[];
 };
 
+/**
+ * Blend weight on real `avg_pts` vs the price curve. Ramps 0 → cap over the
+ * first ~5 scored rounds so the model leans on real performance as it accrues.
+ * Only takes effect once any player actually has a non-zero avg (post-round 1).
+ */
+export function autoStatsBlend(roundNumber: number | null, cap = 0.8): number {
+  if (!roundNumber || roundNumber < 2) return 0;
+  return Math.min(cap, (roundNumber - 1) / 5);
+}
+
 export async function computeProjections(
   db: DB,
   matchdayId: number,
   paramsOverride?: ModelParams,
 ): Promise<ComputeSummary> {
-  const params = paramsOverride ?? (await getModelParams(db));
+  const base = paramsOverride ?? (await getModelParams(db));
 
   const rows = await db
     .select({
@@ -92,6 +103,14 @@ export async function computeProjections(
     .from(schema.playerSnapshots)
     .innerJoin(schema.players, eq(schema.players.id, schema.playerSnapshots.playerId))
     .where(eq(schema.playerSnapshots.matchdayId, matchdayId));
+
+  // auto-ramp the stats blend unless it's been pinned in settings.projectionModel
+  let params = base;
+  if (base.statsBlend === 0) {
+    const round = getSetting<{ number: number | null }>(db, "currentRound")?.number ?? null;
+    const anyReal = rows.some((r) => r.avgPts > 0);
+    if (anyReal) params = { ...base, statsBlend: autoStatsBlend(round) };
+  }
 
   const strengths = buildTeamStrengths(rows, params.coachStrengthTopN);
 

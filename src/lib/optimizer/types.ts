@@ -11,6 +11,8 @@ export type OptimizerPlayer = {
   sigma: number;
   popularity: number;
   opponentAbbr: string | null;
+  /** which turn (game day) of the round this player's club plays; null if unknown */
+  turn: number | null;
 };
 
 export type StrategySpec = {

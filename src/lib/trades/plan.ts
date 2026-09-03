@@ -257,6 +257,9 @@ export async function computeTradePlan(db: DB, matchdayId: number): Promise<Trad
       };
       const res = solveTeam(filtered, spec, {
         anchor: { ids: new Set([...actualIds]), maxChanges: maxMoves },
+        contrarianWeight: getSetting<number>(db, "contrarianWeight") ?? 0.2,
+        turnBalancePenalty: getSetting<number>(db, "turnBalancePenalty") ?? 6,
+        minPerTurn: getSetting<number>(db, "minPerTurn") ?? 5,
       });
       if (res.status === "optimal") {
         targetIds = new Set(res.players.map((p) => p.id));

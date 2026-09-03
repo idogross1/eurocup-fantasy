@@ -23,6 +23,8 @@ async function loadSettings(db: DB) {
   return {
     overlapCap: num("overlapCap", 6),
     contrarianWeight: num("contrarianWeight", 0.2),
+    turnBalancePenalty: num("turnBalancePenalty", 6),
+    minPerTurn: num("minPerTurn", 5),
   };
 }
 
@@ -40,6 +42,7 @@ export async function loadOptimizerPool(
       quotation: schema.playerSnapshots.quotation,
       popularity: schema.playerSnapshots.popularity,
       opponentAbbr: schema.playerSnapshots.opponentAbbr,
+      turn: schema.playerSnapshots.roundNumber,
       mean: schema.projections.mean,
       sigma: schema.projections.sigma,
     })
@@ -118,6 +121,8 @@ export async function optimizeAllTeams(db: DB, matchdayId: number): Promise<Opti
       lockIds,
       boostById,
       contrarianWeight: settings.contrarianWeight,
+      turnBalancePenalty: settings.turnBalancePenalty,
+      minPerTurn: settings.minPerTurn,
       overlapGroups: priorRosters.map((r) => ({ ...r })),
     };
     const res = solveTeam(filtered, spec, opts);

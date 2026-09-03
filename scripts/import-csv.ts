@@ -157,6 +157,8 @@ function main() {
     captainMultiplier: 2,
     benchWeight: 0.5,
     contrarianWeight: 0.2, // aggressive team: value -= contrarianWeight * ownership%
+    turnBalancePenalty: 6, // points/slot penalty for <minPerTurn outfielders on a game-day
+    minPerTurn: 5,
     projectionModel: {}, // overrides on top of DEFAULT_MODEL_PARAMS; see src/lib/projections/model.ts
   };
   for (const [key, value] of Object.entries(seedSettings)) {
