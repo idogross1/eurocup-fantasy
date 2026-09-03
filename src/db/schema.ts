@@ -112,6 +112,11 @@ export const playerFlags = sqliteTable("player_flags", {
   boostPct: real("boost_pct").notNull().default(0), // -50..50, applied to mean
   injuryOverride: text("injury_override"), // 'out' | 'ok' | null
   note: text("note"),
+  /** context captured when injuryOverride was set to 'out' — used to detect a
+   * stale flag (player healthy again in Dunkest, or has scored since). */
+  overrideRound: integer("override_round"),
+  overrideAvgPts: real("override_avg_pts"),
+  overrideSetAt: text("override_set_at"),
 });
 
 export const TEAM_STRATEGIES = ["safe", "balanced", "aggressive"] as const;

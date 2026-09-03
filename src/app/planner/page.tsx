@@ -1,6 +1,8 @@
 import { db } from "@/db";
 import { getRoundPlan, type PlanPlayer } from "@/lib/planner";
 
+import { RebuildBanner } from "../rebuild-banner";
+
 export const dynamic = "force-dynamic";
 
 export default async function PlannerPage() {
@@ -18,6 +20,8 @@ export default async function PlannerPage() {
           . Each player&apos;s turn = the day their real team plays.
         </p>
       </div>
+
+      <RebuildBanner />
 
       {teams.length === 0 && (
         <p className="text-sm text-[var(--muted)]">Run the optimiser to get lineups to plan.</p>

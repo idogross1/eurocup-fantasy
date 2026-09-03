@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 
 import { db, schema } from "@/db";
+import { findStaleOutFlags, isOptimizerStale } from "@/lib/flags";
 import { getLastSync, getSetting, resolveDunkestToken } from "@/lib/kv";
 import { getCurrentMatchday } from "@/lib/players";
 import { tradeWindowStatus } from "@/lib/trades/window";
@@ -26,6 +27,23 @@ export async function getDashboard(): Promise<DashboardData> {
   const window = tradeWindowStatus(round);
 
   const actions: ActionItem[] = [];
+
+  // stale manual "Out" flags — player contradicts the flag
+  for (const s of findStaleOutFlags(db)) {
+    actions.push({
+      severity: s.reason === "played" ? "high" : "med",
+      text: `${s.name} (${s.teamAbbr}) — ${s.detail}`,
+      href: "/players",
+    });
+  }
+
+  if (isOptimizerStale(db)) {
+    actions.push({
+      severity: "med",
+      text: "Flags/settings changed — rebuild the 3 teams",
+      href: "/teams",
+    });
+  }
 
   if (!hasToken) {
     actions.push({ severity: "high", text: "No Dunkest token set — live sync disabled", href: "/settings" });

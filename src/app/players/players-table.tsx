@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 
 import type { PlayerRow } from "@/lib/players";
 
+import { clearFlags, setBoost, toggleFlag } from "./actions";
+
 type SortKey =
   | "name"
   | "position"
@@ -33,11 +35,16 @@ export function PlayersTable({ players }: { players: PlayerRow[] }) {
   const [position, setPosition] = useState<(typeof POSITIONS)[number]>("All");
   const [sortKey, setSortKey] = useState<SortKey>("projMean");
   const [asc, setAsc] = useState(false);
+  const [flaggedOnly, setFlaggedOnly] = useState(false);
+
+  const isFlagged = (p: PlayerRow) =>
+    p.flagLock || p.flagExclude || p.flagBoostPct !== 0 || p.flagInjuryOverride != null;
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
     let out = players.filter((p) => {
       if (position !== "All" && p.position !== position) return false;
+      if (flaggedOnly && !isFlagged(p)) return false;
       if (!q) return true;
       return (
         `${p.firstName} ${p.lastName}`.toLowerCase().includes(q) ||
@@ -70,7 +77,9 @@ export function PlayersTable({ players }: { players: PlayerRow[] }) {
       }
     });
     return out;
-  }, [players, query, position, sortKey, asc]);
+  }, [players, query, position, sortKey, asc, flaggedOnly]);
+
+  const flaggedCount = players.filter(isFlagged).length;
 
   function toggleSort(key: SortKey) {
     if (key === sortKey) {
@@ -105,11 +114,22 @@ export function PlayersTable({ players }: { players: PlayerRow[] }) {
             </button>
           ))}
         </div>
+        <button
+          onClick={() => setFlaggedOnly((v) => !v)}
+          disabled={flaggedCount === 0}
+          className={`rounded-md border px-2.5 py-1.5 text-xs disabled:opacity-40 ${
+            flaggedOnly
+              ? "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--text)]"
+              : "border-[var(--border)] bg-[var(--panel-2)] text-[var(--muted)] hover:text-[var(--text)]"
+          }`}
+        >
+          Flagged{flaggedCount ? ` (${flaggedCount})` : ""}
+        </button>
         <span className="ml-auto text-xs text-[var(--muted)]">{rows.length} shown</span>
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
-        <table className="w-full min-w-[960px] text-sm">
+        <table className="w-full min-w-[1080px] text-sm">
           <thead className="bg-[var(--panel)] text-left text-xs uppercase tracking-wide text-[var(--muted)]">
             <tr>
               <Th onClick={() => toggleSort("name")} active={sortKey === "name"} asc={asc}>
@@ -179,6 +199,7 @@ export function PlayersTable({ players }: { players: PlayerRow[] }) {
               >
                 Opp (R)
               </Th>
+              <th className="px-3 py-2 font-medium">Flags</th>
             </tr>
           </thead>
           <tbody>
@@ -188,15 +209,43 @@ export function PlayersTable({ players }: { players: PlayerRow[] }) {
                 className="border-t border-[var(--border)] hover:bg-[var(--panel)]/60"
               >
                 <td className="px-3 py-2">
-                  <span className="font-medium">
+                  <span
+                    className={`font-medium ${
+                      p.flagExclude || p.flagInjuryOverride === "out"
+                        ? "text-[var(--muted)] line-through"
+                        : ""
+                    }`}
+                  >
                     {p.firstName} {p.lastName}
                   </span>
+                  {p.flagInjuryOverride === "out" && (
+                    <span className="ml-2 rounded bg-red-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-red-400">
+                      OUT
+                    </span>
+                  )}
                   {p.isInjured && (
                     <span className="ml-2 rounded bg-red-500/15 px-1.5 py-0.5 text-[10px] font-medium text-red-400">
                       INJ
                     </span>
                   )}
-                  {p.probabilityOfPlaying < 1 && !p.isInjured && (
+                  {p.flagLock && (
+                    <span className="ml-2 rounded bg-[var(--accent)]/15 px-1.5 py-0.5 text-[10px] font-medium text-[var(--accent)]">
+                      LOCK
+                    </span>
+                  )}
+                  {p.flagBoostPct !== 0 && (
+                    <span
+                      className={`ml-2 rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                        p.flagBoostPct > 0
+                          ? "bg-emerald-500/15 text-emerald-400"
+                          : "bg-amber-500/15 text-amber-400"
+                      }`}
+                    >
+                      {p.flagBoostPct > 0 ? "+" : ""}
+                      {p.flagBoostPct}%
+                    </span>
+                  )}
+                  {p.probabilityOfPlaying < 1 && !p.isInjured && p.flagInjuryOverride !== "out" && (
                     <span className="ml-2 text-[11px] text-amber-400">
                       {Math.round(p.probabilityOfPlaying * 100)}%
                     </span>
@@ -228,11 +277,125 @@ export function PlayersTable({ players }: { players: PlayerRow[] }) {
                 <td className="px-3 py-2 text-[var(--muted)]">
                   {p.opponentAbbr ? `${p.opponentAbbr}${p.roundNumber ? ` (R${p.roundNumber})` : ""}` : "—"}
                 </td>
+                <td className="px-3 py-2">
+                  <FlagControls p={p} />
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+function FlagBtn({
+  action,
+  playerId,
+  field,
+  on,
+  active,
+  title,
+  children,
+  danger,
+}: {
+  action: (fd: FormData) => void;
+  playerId: number;
+  field: string;
+  on: boolean;
+  active: boolean;
+  title: string;
+  children: React.ReactNode;
+  danger?: boolean;
+}) {
+  return (
+    <form action={action} className="inline">
+      <input type="hidden" name="playerId" value={playerId} />
+      <input type="hidden" name="field" value={field} />
+      <input type="hidden" name="on" value={String(on)} />
+      <button
+        title={title}
+        className={`h-6 min-w-6 rounded border px-1 text-[11px] font-medium ${
+          active
+            ? danger
+              ? "border-red-500 bg-red-500/20 text-red-300"
+              : "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]"
+            : "border-[var(--border)] bg-[var(--panel-2)] text-[var(--muted)] hover:text-[var(--text)]"
+        }`}
+      >
+        {children}
+      </button>
+    </form>
+  );
+}
+
+function FlagControls({ p }: { p: PlayerRow }) {
+  const anyFlag =
+    p.flagLock || p.flagExclude || p.flagBoostPct !== 0 || p.flagInjuryOverride != null;
+  return (
+    <div className="flex items-center gap-1">
+      <FlagBtn
+        action={toggleFlag}
+        playerId={p.id}
+        field="out"
+        on={p.flagInjuryOverride !== "out"}
+        active={p.flagInjuryOverride === "out"}
+        title="Injured / out — projection zeroed, optimiser skips"
+        danger
+      >
+        Out
+      </FlagBtn>
+      <FlagBtn
+        action={toggleFlag}
+        playerId={p.id}
+        field="exclude"
+        on={!p.flagExclude}
+        active={p.flagExclude}
+        title="Exclude from all rosters"
+      >
+        ✕
+      </FlagBtn>
+      <FlagBtn
+        action={toggleFlag}
+        playerId={p.id}
+        field="lock"
+        on={!p.flagLock}
+        active={p.flagLock}
+        title="Lock into the roster"
+      >
+        🔒
+      </FlagBtn>
+      <form action={setBoost} className="inline">
+        <input type="hidden" name="playerId" value={p.id} />
+        <input type="hidden" name="pct" value={Math.max(-50, p.flagBoostPct - 10)} />
+        <button
+          title="Fade projection −10%"
+          className="h-6 w-6 rounded border border-[var(--border)] bg-[var(--panel-2)] text-[11px] text-[var(--muted)] hover:text-[var(--text)]"
+        >
+          −
+        </button>
+      </form>
+      <form action={setBoost} className="inline">
+        <input type="hidden" name="playerId" value={p.id} />
+        <input type="hidden" name="pct" value={Math.min(50, p.flagBoostPct + 10)} />
+        <button
+          title="Boost projection +10%"
+          className="h-6 w-6 rounded border border-[var(--border)] bg-[var(--panel-2)] text-[11px] text-[var(--muted)] hover:text-[var(--text)]"
+        >
+          +
+        </button>
+      </form>
+      {anyFlag && (
+        <form action={clearFlags} className="inline">
+          <input type="hidden" name="playerId" value={p.id} />
+          <button
+            title="Clear all flags for this player"
+            className="h-6 w-6 rounded border border-transparent text-[11px] text-[var(--muted)] hover:text-red-400"
+          >
+            ⟲
+          </button>
+        </form>
+      )}
     </div>
   );
 }

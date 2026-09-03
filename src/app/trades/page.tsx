@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { getCurrentMatchday } from "@/lib/players";
 import { computeTradePlan, type TradeMove } from "@/lib/trades/plan";
 
+import { RebuildBanner } from "../rebuild-banner";
 import { regenerate, setApplied } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -33,6 +34,8 @@ export default async function TradesPage() {
           </button>
         </form>
       </div>
+
+      <RebuildBanner />
 
       {plan && (
         <div

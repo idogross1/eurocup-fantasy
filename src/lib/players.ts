@@ -21,6 +21,11 @@ export type PlayerRow = {
   projFloor: number | null;
   projCeiling: number | null;
   projValue: number | null; // mean per credit
+  // manual flags (player_flags)
+  flagLock: boolean;
+  flagExclude: boolean;
+  flagBoostPct: number;
+  flagInjuryOverride: "out" | "ok" | null;
 };
 
 export type MatchdayRow = typeof schema.matchdays.$inferSelect;
@@ -66,6 +71,10 @@ export async function getPlayersForCurrentMatchday(): Promise<{
       projMean: schema.projections.mean,
       projFloor: schema.projections.floor,
       projCeiling: schema.projections.ceiling,
+      flagLock: schema.playerFlags.lock,
+      flagExclude: schema.playerFlags.exclude,
+      flagBoostPct: schema.playerFlags.boostPct,
+      flagInjuryOverride: schema.playerFlags.injuryOverride,
     })
     .from(schema.playerSnapshots)
     .innerJoin(schema.players, eq(schema.players.id, schema.playerSnapshots.playerId))
@@ -77,12 +86,17 @@ export async function getPlayersForCurrentMatchday(): Promise<{
         eq(schema.projections.matchdayId, matchday.id),
       ),
     )
+    .leftJoin(schema.playerFlags, eq(schema.playerFlags.playerId, schema.playerSnapshots.playerId))
     .where(eq(schema.playerSnapshots.matchdayId, matchday.id));
 
   return {
     matchday,
     players: rows.map((r) => ({
       ...r,
+      flagLock: r.flagLock ?? false,
+      flagExclude: r.flagExclude ?? false,
+      flagBoostPct: r.flagBoostPct ?? 0,
+      flagInjuryOverride: (r.flagInjuryOverride as "out" | "ok" | null) ?? null,
       projValue:
         r.projMean != null && r.quotation > 0
           ? Math.round((r.projMean / r.quotation) * 100) / 100

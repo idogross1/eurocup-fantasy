@@ -1,5 +1,7 @@
 import { getTeamsForCurrentMatchday, type TeamRosterPlayer } from "@/lib/teams";
 
+import { RebuildBanner } from "../rebuild-banner";
+
 export const dynamic = "force-dynamic";
 
 const STRATEGY_BLURB: Record<string, string> = {
@@ -29,6 +31,8 @@ export default async function TeamsPage() {
           overlap cap decorrelates the three rosters
         </p>
       </div>
+
+      <RebuildBanner />
 
       {!built && (
         <div className="rounded-lg border border-[var(--border)] bg-[var(--panel)] p-5 text-sm">

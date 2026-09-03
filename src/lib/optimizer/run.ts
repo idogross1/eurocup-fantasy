@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 
 import { schema } from "@/db/connection";
+import { setSetting } from "@/lib/kv";
 
 import { solveTeam, type SolveOptions } from "./solve";
 import type { OptimizerPlayer, StrategySpec, TeamResult } from "./types";
@@ -137,6 +138,7 @@ export async function optimizeAllTeams(db: DB, matchdayId: number): Promise<Opti
   }
 
   await persistRosters(db, matchdayId, results);
+  setSetting(db, "optimizerStale", false);
   return { matchdayId, teams: results };
 }
 
