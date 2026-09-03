@@ -1,4 +1,4 @@
-import { getTeamsForCurrentMatchday } from "@/lib/teams";
+import { getTeamsForCurrentMatchday, type TeamRosterPlayer } from "@/lib/teams";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +44,7 @@ export default async function TeamsPage() {
         {teams.map((t) => (
           <div
             key={t.id}
-            className="flex flex-col rounded-lg border border-[var(--border)] bg-[var(--panel)]"
+            className="flex flex-col overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--panel)]"
           >
             <div className="border-b border-[var(--border)] p-4">
               <div className="flex items-baseline justify-between">
@@ -73,44 +73,27 @@ export default async function TeamsPage() {
             </div>
 
             {t.players.length > 0 && (
-              <table className="w-full flex-1 text-sm">
+              <table className="w-full flex-1 border-collapse text-sm">
+                <thead>
+                  <tr className="text-[10px] uppercase tracking-wide text-[var(--muted)]">
+                    <th className="py-1.5 pl-4 pr-2 text-left font-medium">Player</th>
+                    <th className="px-2 py-1.5 text-left font-medium">Team</th>
+                    <th className="px-2 py-1.5 text-right font-medium">Cr</th>
+                    <th className="py-1.5 pl-2 pr-4 text-right font-medium">Proj</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {t.players.map((p, i) => {
                     const prevSlot = i > 0 ? t.players[i - 1].slot : null;
+                    const groupStart = prevSlot !== p.slot;
                     return (
-                      <tr
+                      <FragmentRow
                         key={p.id}
-                        className={`border-t border-[var(--border)] ${
-                          p.slot === "bench" ? "text-[var(--muted)]" : ""
-                        } ${prevSlot && prevSlot !== p.slot ? "border-t-[var(--border)]" : ""}`}
-                      >
-                        <td className="py-1.5 pl-4 pr-2 text-[11px] uppercase text-[var(--muted)]">
-                          {prevSlot === p.slot ? "" : SLOT_LABEL[p.slot]}
-                        </td>
-                        <td className="px-2 py-1.5">
-                          {p.name}
-                          {p.isCaptain && (
-                            <span className="ml-1.5 rounded bg-[var(--accent)]/15 px-1 text-[10px] font-bold text-[var(--accent)]">
-                              C
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-2 py-1.5 text-[var(--muted)]">
-                          {p.position === "Head Coach" ? "HC" : p.position[0]}
-                        </td>
-                        <td className="px-2 py-1.5 text-[var(--muted)]">
-                          {p.teamAbbr}
-                          <span className="text-[var(--muted)]/50">
-                            {p.opponentAbbr ? ` v${p.opponentAbbr}` : ""}
-                          </span>
-                        </td>
-                        <td className="px-2 py-1.5 text-right tabular-nums">
-                          {p.quotation.toFixed(1)}
-                        </td>
-                        <td className="py-1.5 pl-2 pr-4 text-right tabular-nums font-medium">
-                          {p.mean != null ? p.mean.toFixed(1) : "—"}
-                        </td>
-                      </tr>
+                        groupStart={groupStart}
+                        slotLabel={SLOT_LABEL[p.slot]}
+                        bench={p.slot === "bench"}
+                        p={p}
+                      />
                     );
                   })}
                 </tbody>
@@ -120,5 +103,54 @@ export default async function TeamsPage() {
         ))}
       </div>
     </div>
+  );
+}
+
+function FragmentRow({
+  groupStart,
+  slotLabel,
+  bench,
+  p,
+}: {
+  groupStart: boolean;
+  slotLabel: string;
+  bench: boolean;
+  p: TeamRosterPlayer;
+}) {
+  const pos = p.position === "Head Coach" ? "HC" : p.position[0];
+  return (
+    <>
+      {groupStart && (
+        <tr>
+          <td
+            colSpan={4}
+            className="border-t border-[var(--border)] bg-[var(--panel-2)]/60 px-4 py-1 text-[10px] font-medium uppercase tracking-wide text-[var(--muted)]"
+          >
+            {slotLabel}
+          </td>
+        </tr>
+      )}
+      <tr className={bench ? "text-[var(--muted)]" : ""}>
+        <td className="py-1.5 pl-4 pr-2">
+          <span className="mr-1.5 inline-block w-4 text-[var(--muted)]">{pos}</span>
+          {p.name}
+          {p.isCaptain && (
+            <span className="ml-1.5 rounded bg-[var(--accent)]/15 px-1 text-[10px] font-bold text-[var(--accent)]">
+              C
+            </span>
+          )}
+        </td>
+        <td className="whitespace-nowrap px-2 py-1.5 text-[var(--muted)]">
+          {p.teamAbbr}
+          <span className="text-[var(--muted)]/50">
+            {p.opponentAbbr ? ` v${p.opponentAbbr}` : ""}
+          </span>
+        </td>
+        <td className="px-2 py-1.5 text-right tabular-nums">{p.quotation.toFixed(1)}</td>
+        <td className="py-1.5 pl-2 pr-4 text-right tabular-nums font-medium">
+          {p.mean != null ? p.mean.toFixed(1) : "—"}
+        </td>
+      </tr>
+    </>
   );
 }
