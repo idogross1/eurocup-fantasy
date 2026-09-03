@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 
 import { db, schema } from "@/db";
+import { markOptimizerStale } from "@/lib/flags";
 import { DUNKEST_TOKEN_KEY, deleteSetting, setSetting } from "@/lib/kv";
 
 export async function saveToken(formData: FormData) {
@@ -35,4 +36,34 @@ export async function saveMapping(formData: FormData) {
     .where(eq(schema.syncedTeams.dunkestTeamId, dunkestTeamId))
     .run();
   revalidatePath("/settings");
+}
+
+const clamp = (v: number, lo: number, hi: number, d: number) =>
+  Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d;
+
+export async function saveTuning(formData: FormData) {
+  const num = (k: string) => Number(formData.get(k));
+
+  const budget = clamp(num("budget"), 80, 130, 100);
+  const safeK = clamp(num("safeK"), 0, 2, 0.6);
+  const aggK = clamp(num("aggK"), 0, 2, 0.6);
+
+  db.update(schema.fantasyTeams).set({ budget }).run();
+  db.update(schema.fantasyTeams)
+    .set({ riskK: safeK })
+    .where(eq(schema.fantasyTeams.strategy, "safe"))
+    .run();
+  db.update(schema.fantasyTeams)
+    .set({ riskK: aggK })
+    .where(eq(schema.fantasyTeams.strategy, "aggressive"))
+    .run();
+
+  setSetting(db, "overlapCap", Math.round(clamp(num("overlapCap"), 3, 11, 6)));
+  setSetting(db, "contrarianWeight", clamp(num("contrarianWeight"), 0, 1, 0.2));
+  setSetting(db, "turnBalancePenalty", clamp(num("turnBalancePenalty"), 0, 20, 6));
+  setSetting(db, "minPerTurn", Math.round(clamp(num("minPerTurn"), 3, 6, 5)));
+
+  markOptimizerStale(db);
+  revalidatePath("/settings");
+  revalidatePath("/");
 }

@@ -49,12 +49,35 @@ export default async function PlannerPage() {
                       {tp.coach ? ` · coach ${tp.coach.teamAbbr}` : ""}
                     </span>
                   </div>
+                  {tp.captain && (
+                    <p className="mt-1 text-xs">
+                      <span className="rounded bg-[var(--accent)]/15 px-1 text-[10px] font-bold text-[var(--accent)]">
+                        C
+                      </span>{" "}
+                      <span className="text-[var(--text)]">{tp.captain.name}</span>
+                      <span className="text-[var(--muted)]">
+                        {" "}
+                        — highest projection playing this turn
+                      </span>
+                    </p>
+                  )}
                   <p className="mt-1 text-xs text-[var(--muted)]">{tp.note}</p>
 
                   <PlayerList label="Start" players={tp.starters} captainId={tp.captain?.id} />
-                  {tp.bench.length > 0 && <PlayerList label="Bench (plays, 50%)" players={tp.bench} />}
+                  {tp.bench.length > 0 && (
+                    <PlayerList label="Bench this turn (plays, 50%)" players={tp.bench} />
+                  )}
                   {tp.notPlaying.length > 0 && (
-                    <PlayerList label="No game this turn" players={tp.notPlaying} muted />
+                    <div className="mt-3">
+                      <div className="text-[10px] uppercase tracking-wide text-[var(--muted)]">
+                        No game in Turn {tp.turn}
+                      </div>
+                      <p className="mt-1 text-xs text-[var(--muted)]">
+                        {tp.notPlaying
+                          .map((p) => `${p.position === "Head Coach" ? "HC" : p.position[0]} ${p.name}`)
+                          .join(", ")}
+                      </p>
+                    </div>
                   )}
                 </div>
               ))}

@@ -1,7 +1,8 @@
 import { db, schema } from "@/db";
 import { DUNKEST_TOKEN_KEY, getLastSync, getSetting } from "@/lib/kv";
 
-import { clearToken, saveMapping, saveToken } from "./actions";
+import { RebuildBanner } from "../rebuild-banner";
+import { clearToken, saveMapping, saveToken, saveTuning } from "./actions";
 import { SyncButton } from "./sync-button";
 
 export const dynamic = "force-dynamic";
@@ -14,11 +15,21 @@ export default async function SettingsPage() {
   const syncedTeams = await db.select().from(schema.syncedTeams).orderBy(schema.syncedTeams.dunkestTeamId);
   const fantasyTeams = await db.select().from(schema.fantasyTeams).orderBy(schema.fantasyTeams.id);
 
+  const safeK = fantasyTeams.find((t) => t.strategy === "safe")?.riskK ?? 0.6;
+  const aggK = fantasyTeams.find((t) => t.strategy === "aggressive")?.riskK ?? 0.6;
+  const budget = fantasyTeams[0]?.budget ?? 100;
+  const overlapCap = getSetting<number>(db, "overlapCap") ?? 6;
+  const contrarianWeight = getSetting<number>(db, "contrarianWeight") ?? 0.2;
+  const turnBalancePenalty = getSetting<number>(db, "turnBalancePenalty") ?? 6;
+  const minPerTurn = getSetting<number>(db, "minPerTurn") ?? 5;
+
   const mask = (t: string) => (t.length > 10 ? `${t.slice(0, 4)}…${t.slice(-4)}` : "set");
 
   return (
     <div className="max-w-2xl space-y-8">
       <h1 className="text-2xl font-semibold">Settings</h1>
+
+      <RebuildBanner />
 
       {/* Token */}
       <section className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--panel)] p-5">
@@ -92,6 +103,70 @@ export default async function SettingsPage() {
         )}
       </section>
 
+      {/* Tuning */}
+      <section className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--panel)] p-5">
+        <h2 className="font-medium">Optimiser tuning</h2>
+        <p className="text-sm text-[var(--muted)]">
+          How the 3 teams are built. Save, then rebuild (banner appears above).
+        </p>
+        <form action={saveTuning} className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
+          <Field
+            label="Budget (credits)"
+            name="budget"
+            defaultValue={budget}
+            step={0.1}
+            hint="100 + 0.3 per round joined late"
+          />
+          <Field
+            label="Overlap cap"
+            name="overlapCap"
+            defaultValue={overlapCap}
+            step={1}
+            hint="max shared players between any 2 teams"
+          />
+          <Field
+            label="Safe · risk k"
+            name="safeK"
+            defaultValue={safeK}
+            step={0.1}
+            hint="floor = mean − k·σ; higher = more conservative"
+          />
+          <Field
+            label="Aggressive · risk k"
+            name="aggK"
+            defaultValue={aggK}
+            step={0.1}
+            hint="ceiling = mean + k·σ; higher = more boom/bust"
+          />
+          <Field
+            label="Contrarian weight"
+            name="contrarianWeight"
+            defaultValue={contrarianWeight}
+            step={0.05}
+            hint="aggressive team: value −= w · ownership%"
+          />
+          <Field
+            label="Turn-balance penalty"
+            name="turnBalancePenalty"
+            defaultValue={turnBalancePenalty}
+            step={1}
+            hint="pts/slot for <min outfielders on a game-day"
+          />
+          <Field
+            label="Min per turn"
+            name="minPerTurn"
+            defaultValue={minPerTurn}
+            step={1}
+            hint="target outfielders playable each game-day"
+          />
+          <div className="col-span-2">
+            <button className="rounded-md border border-[var(--border)] bg-[var(--panel-2)] px-4 py-2 text-sm hover:border-[var(--accent)]">
+              Save tuning
+            </button>
+          </div>
+        </form>
+      </section>
+
       {/* Team mapping */}
       {syncedTeams.length > 0 && (
         <section className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--panel)] p-5">
@@ -133,5 +208,33 @@ export default async function SettingsPage() {
         </section>
       )}
     </div>
+  );
+}
+
+function Field({
+  label,
+  name,
+  defaultValue,
+  step,
+  hint,
+}: {
+  label: string;
+  name: string;
+  defaultValue: number;
+  step: number;
+  hint: string;
+}) {
+  return (
+    <label className="block">
+      <span className="text-[var(--text)]">{label}</span>
+      <input
+        type="number"
+        name={name}
+        defaultValue={defaultValue}
+        step={step}
+        className="mt-1 w-full rounded-md border border-[var(--border)] bg-[var(--panel-2)] px-2 py-1 text-sm outline-none focus:border-[var(--accent)]"
+      />
+      <span className="mt-0.5 block text-[11px] text-[var(--muted)]">{hint}</span>
+    </label>
   );
 }

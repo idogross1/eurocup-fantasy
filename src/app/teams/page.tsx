@@ -80,6 +80,21 @@ export default async function TeamsPage() {
                   {t.formationName ?? "—"}
                 </span>
               </div>
+              {(() => {
+                const c = t.players.find((p) => p.isCaptain);
+                if (!c) return null;
+                const starters = t.players.filter((p) => p.slot === "starter" || p.slot === "sixth");
+                const topMean = Math.max(...starters.map((p) => p.mean ?? 0));
+                const isTop = (c.mean ?? 0) >= topMean - 0.01;
+                return (
+                  <p className="mt-2 text-xs text-[var(--muted)]">
+                    <span className="font-medium text-[var(--accent)]">C</span> {c.name} — ×2 on{" "}
+                    {c.mean != null ? c.mean.toFixed(1) : "—"} proj
+                    {c.opponentAbbr ? ` vs ${c.opponentAbbr}` : ""}
+                    {isTop ? " (highest in the starting five)" : ""}
+                  </p>
+                );
+              })()}
             </div>
 
             {t.players.length > 0 && (
