@@ -24,7 +24,7 @@ export type StrategySpec = {
 };
 
 export type RosterPlayer = OptimizerPlayer & {
-  slot: "starter" | "sixth" | "bench" | "coach";
+  slot: "starter" | "bench" | "coach";
   isCaptain: boolean;
   /** strategy value used by the optimizer for this player */
   value: number;

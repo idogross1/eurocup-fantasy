@@ -13,7 +13,6 @@ const STRATEGY_BLURB: Record<string, string> = {
 const SLOT_LABEL: Record<string, string> = {
   coach: "Coach",
   starter: "Starter",
-  sixth: "6th man",
   bench: "Bench",
 };
 
@@ -83,7 +82,7 @@ export default async function TeamsPage() {
               {(() => {
                 const c = t.players.find((p) => p.isCaptain);
                 if (!c) return null;
-                const starters = t.players.filter((p) => p.slot === "starter" || p.slot === "sixth");
+                const starters = t.players.filter((p) => p.slot === "starter");
                 const topMean = Math.max(...starters.map((p) => p.mean ?? 0));
                 const isTop = (c.mean ?? 0) >= topMean - 0.01;
                 return (

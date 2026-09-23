@@ -7,6 +7,7 @@ import { FORMATIONS } from "@/lib/optimizer/formations";
 import { getCurrentMatchday, type MatchdayRow } from "./players";
 
 type DB = Db;
+type Pos = "Guard" | "Forward" | "Center";
 
 export type PlanPlayer = {
   id: number;
@@ -15,19 +16,30 @@ export type PlanPlayer = {
   teamAbbr: string;
   opponentAbbr: string | null;
   mean: number;
-  roundNumber: number | null;
-  rosterSlot: string; // optimizer slot: starter/sixth/bench/coach
+  roundNumber: number | null; // which turn (game-day) this player's club plays
+  rosterSlot: "starter" | "bench" | "coach"; // recommended slot for the round
+  isCaptain: boolean; // recommended captain for the round
 };
+
+/**
+ * Comparison against your actual saved lineup in the app (from the last sync).
+ * Scoped to *lineup* (starter/bench/captain) only — a mismatch in which 11
+ * players you own is a Trades concern, flagged here as "roster-mismatch" and
+ * left for that page.
+ */
+export type LineupCheck =
+  | { status: "unsynced" }
+  | { status: "roster-mismatch"; realTeamName: string; missingCount: number }
+  | { status: "match"; realTeamName: string }
+  | { status: "needs-fix"; realTeamName: string; fixes: string[] };
 
 export type TurnPlan = {
   turn: number;
-  playing: PlanPlayer[];
-  notPlaying: PlanPlayer[];
-  starters: PlanPlayer[];
-  bench: PlanPlayer[];
-  coach: PlanPlayer | null;
+  starters: (PlanPlayer & { playing: boolean })[];
+  bench: (PlanPlayer & { playing: boolean })[];
+  coach: (PlanPlayer & { playing: boolean }) | null;
   captain: PlanPlayer | null;
-  formationName: string | null;
+  swaps: { in: PlanPlayer; out: PlanPlayer }[];
   note: string;
 };
 
@@ -35,39 +47,136 @@ export type TeamPlan = {
   id: number;
   name: string;
   strategy: string;
-  roster: PlanPlayer[];
+  formationName: string | null;
+  lineupCheck: LineupCheck;
   turns: TurnPlan[];
 };
 
-const POS_IDX: Record<string, 0 | 1 | 2> = { Guard: 0, Forward: 1, Center: 2 };
+/**
+ * The turn-optimal assignment for one position: among all roster players of
+ * that position, the ones with a game this turn — highest projection first —
+ * fill the (fixed, from the round's formation) number of 100% slots; the rest
+ * sit at 50%. This can never fail to find a "legal formation" — the per-
+ * position starter counts never change turn to turn, only *which* player of
+ * that position fills them — so unlike a from-scratch formation search, there
+ * is no "no legal formation" failure mode.
+ */
+function turnOptimalSplit(
+  positionRoster: PlanPlayer[],
+  starterCount: number,
+  turn: number,
+): { starters: PlanPlayer[]; bench: PlanPlayer[] } {
+  const sorted = [...positionRoster].sort((a, b) => {
+    const aPlay = a.roundNumber === turn;
+    const bPlay = b.roundNumber === turn;
+    if (aPlay !== bPlay) return aPlay ? -1 : 1;
+    return b.mean - a.mean;
+  });
+  return { starters: sorted.slice(0, starterCount), bench: sorted.slice(starterCount) };
+}
 
-/** Best legal starting five from the players available a given turn. */
-function bestStartingFive(eligible: PlanPlayer[]): {
-  starters: PlanPlayer[];
-  formationName: string | null;
-} {
-  const byPos: PlanPlayer[][] = [[], [], []];
-  for (const p of eligible) {
-    const i = POS_IDX[p.position];
-    if (i !== undefined) byPos[i].push(p);
+function computeTurnPlan(
+  outfield: PlanPlayer[], // the 10 non-coach roster players, rosterSlot already set
+  coach: PlanPlayer | null,
+  turn: number,
+): TurnPlan {
+  const byPos = new Map<Pos, PlanPlayer[]>();
+  for (const p of outfield) {
+    const list = byPos.get(p.position as Pos) ?? [];
+    list.push(p);
+    byPos.set(p.position as Pos, list);
   }
-  byPos.forEach((list) => list.sort((a, b) => b.mean - a.mean));
 
-  let best: { starters: PlanPlayer[]; score: number; name: string } | null = null;
-  for (const f of FORMATIONS) {
-    const [g, fw, c] = f.comp;
-    if (byPos[0].length < g || byPos[1].length < fw || byPos[2].length < c) continue;
-    const pick = [...byPos[0].slice(0, g), ...byPos[1].slice(0, fw), ...byPos[2].slice(0, c)];
-    const score = pick.reduce((s, p) => s + p.mean, 0);
-    if (!best || score > best.score) best = { starters: pick, score, name: f.name };
+  const starters: PlanPlayer[] = [];
+  const bench: PlanPlayer[] = [];
+  for (const [, list] of byPos) {
+    const starterCount = list.filter((p) => p.rosterSlot === "starter").length;
+    const split = turnOptimalSplit(list, starterCount, turn);
+    starters.push(...split.starters);
+    bench.push(...split.bench);
   }
-  if (best) return { starters: best.starters, formationName: best.name };
 
-  // no legal formation this turn — just field the top 5 available
+  const promoted = starters.filter((p) => p.rosterSlot === "bench");
+  const demoted = bench.filter((p) => p.rosterSlot === "starter");
+  const swaps = promoted
+    .sort((a, b) => b.mean - a.mean)
+    .map((inP, i) => ({ in: inP, out: demoted[i] }))
+    .filter((s) => s.out);
+
+  const playingStarters = starters.filter((p) => p.roundNumber === turn);
+  const captain = playingStarters.length
+    ? playingStarters.reduce((a, b) => (b.mean > a.mean ? b : a))
+    : null;
+
+  const note =
+    swaps.length === 0
+      ? `No changes needed for Turn ${turn} — your saved lineup already covers it.`
+      : swaps
+          .map((s) => `Swap in ${s.in.name} for ${s.out.name} (both ${s.in.position}s)`)
+          .join("; ") + ".";
+
+  const withPlaying = (p: PlanPlayer) => ({ ...p, playing: p.roundNumber === turn });
+
   return {
-    starters: [...eligible].sort((a, b) => b.mean - a.mean).slice(0, 5),
-    formationName: null,
+    turn,
+    starters: starters.map(withPlaying).sort((a, b) => b.mean - a.mean),
+    bench: bench.map(withPlaying).sort((a, b) => b.mean - a.mean),
+    coach: coach ? withPlaying(coach) : null,
+    captain,
+    swaps,
+    note,
   };
+}
+
+async function buildLineupCheck(
+  db: DB,
+  matchdayId: number,
+  outfield: PlanPlayer[],
+  syncedTeam: { dunkestTeamId: number; name: string } | undefined,
+): Promise<LineupCheck> {
+  if (!syncedTeam) return { status: "unsynced" };
+
+  const actualRows = await db
+    .select({
+      playerId: schema.syncedRosterEntries.playerId,
+      slot: schema.syncedRosterEntries.slot,
+      isCaptain: schema.syncedRosterEntries.isCaptain,
+    })
+    .from(schema.syncedRosterEntries)
+    .where(
+      and(
+        eq(schema.syncedRosterEntries.dunkestTeamId, syncedTeam.dunkestTeamId),
+        eq(schema.syncedRosterEntries.matchdayId, matchdayId),
+      ),
+    );
+  if (actualRows.length === 0) return { status: "unsynced" };
+
+  const actualByPlayer = new Map(actualRows.map((r) => [r.playerId, r]));
+  const owned = outfield.filter((p) => actualByPlayer.has(p.id));
+  const missingCount = outfield.length - owned.length;
+  if (missingCount > 0) {
+    return { status: "roster-mismatch", realTeamName: syncedTeam.name, missingCount };
+  }
+
+  const fixes: string[] = [];
+  for (const p of owned) {
+    const actual = actualByPlayer.get(p.id)!;
+    const actualSlot = actual.slot === "bench" ? "bench" : "starter";
+    if (actualSlot !== p.rosterSlot) {
+      fixes.push(`${p.name}: currently ${actualSlot} in the app — move to ${p.rosterSlot}`);
+    }
+  }
+
+  const recommendedCaptain = owned.find((p) => p.isCaptain);
+  const actualCaptainId = actualRows.find((r) => r.isCaptain)?.playerId;
+  if (recommendedCaptain && actualCaptainId !== recommendedCaptain.id) {
+    const actualCaptainName = owned.find((p) => p.id === actualCaptainId)?.name ?? "someone else";
+    fixes.push(`Captain: currently ${actualCaptainName} — set ${recommendedCaptain.name}`);
+  }
+
+  return fixes.length === 0
+    ? { status: "match", realTeamName: syncedTeam.name }
+    : { status: "needs-fix", realTeamName: syncedTeam.name, fixes };
 }
 
 export async function getRoundPlan(db: DB): Promise<{
@@ -82,6 +191,8 @@ export async function getRoundPlan(db: DB): Promise<{
     .select({
       fantasyTeamId: schema.rosterEntries.fantasyTeamId,
       slot: schema.rosterEntries.slot,
+      isCaptain: schema.rosterEntries.isCaptain,
+      formationId: schema.rosterEntries.formationId,
       id: schema.players.id,
       firstName: schema.players.firstName,
       lastName: schema.players.lastName,
@@ -118,14 +229,26 @@ export async function getRoundPlan(db: DB): Promise<{
     .select()
     .from(schema.fantasyTeams)
     .orderBy(schema.fantasyTeams.id);
+  const syncedTeams = await db.select().from(schema.syncedTeams);
+  const syncedByFt = new Map(
+    syncedTeams.filter((s) => s.mappedFantasyTeamId != null).map((s) => [s.mappedFantasyTeamId!, s]),
+  );
 
   const turnsSet = new Set<number>();
   for (const r of rows) if (r.roundNumber != null) turnsSet.add(r.roundNumber);
   const turns = [...turnsSet].sort((a, b) => a - b);
 
-  const byTeam = new Map<number, PlanPlayer[]>();
+  const byTeam = new Map<number, typeof rows>();
   for (const r of rows) {
-    const p: PlanPlayer = {
+    (byTeam.get(r.fantasyTeamId) ?? byTeam.set(r.fantasyTeamId, []).get(r.fantasyTeamId)!).push(r);
+  }
+
+  const teams: TeamPlan[] = [];
+  for (const ft of fantasyTeams) {
+    const teamRows = byTeam.get(ft.id);
+    if (!teamRows || teamRows.length === 0) continue;
+
+    const toPlan = (r: (typeof teamRows)[number]): PlanPlayer => ({
       id: r.id,
       name: `${r.firstName} ${r.lastName}`.trim(),
       position: r.position,
@@ -133,55 +256,29 @@ export async function getRoundPlan(db: DB): Promise<{
       opponentAbbr: r.opponentAbbr ?? null,
       mean: r.mean ?? 0,
       roundNumber: r.roundNumber ?? null,
-      rosterSlot: r.slot,
-    };
-    (byTeam.get(r.fantasyTeamId) ?? byTeam.set(r.fantasyTeamId, []).get(r.fantasyTeamId)!).push(p);
-  }
-
-  const teams: TeamPlan[] = fantasyTeams
-    .filter((ft) => byTeam.has(ft.id))
-    .map((ft) => {
-      const roster = (byTeam.get(ft.id) ?? []).sort((a, b) => b.mean - a.mean);
-      const turnPlans: TurnPlan[] = turns.map((turn) => {
-        const playing = roster.filter((p) => p.roundNumber === turn);
-        const notPlaying = roster.filter((p) => p.roundNumber !== turn);
-        const coach = playing.find((p) => p.position === "Head Coach") ?? null;
-        const eligibleField = playing.filter((p) => p.position !== "Head Coach");
-        const { starters, formationName } = bestStartingFive(eligibleField);
-        const starterIds = new Set(starters.map((p) => p.id));
-        const bench = eligibleField.filter((p) => !starterIds.has(p.id));
-        const captain = starters.length
-          ? starters.reduce((a, b) => (b.mean > a.mean ? b : a))
-          : null;
-
-        let note: string;
-        if (eligibleField.length === 0) {
-          note = `None of your outfield players have a game in Turn ${turn}.`;
-        } else if (starters.length < 5) {
-          note = `Only ${eligibleField.length} outfield players have a game in Turn ${turn} — field them all.`;
-        } else if (!formationName) {
-          note = `No legal formation from Turn ${turn}'s available players — top 5 by projection shown.`;
-        } else {
-          note = `Field these 5 (${formationName}), captain ${captain?.name}. Sub the rest in for Turn ${
-            turns.find((x) => x !== turn) ?? "later"
-          }.`;
-        }
-
-        return {
-          turn,
-          playing,
-          notPlaying,
-          starters,
-          bench,
-          coach,
-          captain,
-          formationName,
-          note,
-        };
-      });
-
-      return { id: ft.id, name: ft.name, strategy: ft.strategy, roster, turns: turnPlans };
+      rosterSlot: r.slot as "starter" | "bench" | "coach",
+      isCaptain: r.isCaptain,
     });
+
+    const outfield = teamRows.filter((r) => r.position !== "Head Coach").map(toPlan);
+    const coach = teamRows.find((r) => r.position === "Head Coach");
+    const coachPlan = coach ? toPlan(coach) : null;
+    const formationId = teamRows.find((r) => r.formationId != null)?.formationId ?? null;
+
+    const [lineupCheck, ...turnPlans] = await Promise.all([
+      buildLineupCheck(db, matchday.id, outfield, syncedByFt.get(ft.id)),
+      ...turns.map((turn) => Promise.resolve(computeTurnPlan(outfield, coachPlan, turn))),
+    ]);
+
+    teams.push({
+      id: ft.id,
+      name: ft.name,
+      strategy: ft.strategy,
+      formationName: FORMATIONS.find((f) => f.id === formationId)?.name ?? null,
+      lineupCheck,
+      turns: turnPlans as TurnPlan[],
+    });
+  }
 
   return { matchday, turns, teams };
 }

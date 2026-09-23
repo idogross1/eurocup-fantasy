@@ -1,11 +1,6 @@
 import { solve } from "yalps";
 
-import {
-  benchComp,
-  NON_BENCH_COMPS,
-  seatLineup,
-  type Pos,
-} from "./formations";
+import { FORMATIONS, type Pos } from "./formations";
 import type { OptimizerPlayer, RosterPlayer, StrategySpec, TeamResult } from "./types";
 
 const POSITION_COUNTS = { Guard: 4, Forward: 4, Center: 2 } as const;
@@ -77,18 +72,21 @@ export function solveTeam(
   const nonCoach = pool.filter((p) => p.position !== "Head Coach");
   const coaches = pool.filter((p) => p.position === "Head Coach");
 
+  // Roster is exactly 5 starters (100%) + 5 bench (50%) + 1 coach (100%) — see
+  // formations.ts. The starters' G/F/C counts must match one of the 5 legal
+  // formations exactly, via the starter{Pos}Link constraints below.
   const constraints: Record<string, { equal?: number; max?: number; min?: number }> = {
     guards: { equal: POSITION_COUNTS.Guard },
     forwards: { equal: POSITION_COUNTS.Forward },
     centers: { equal: POSITION_COUNTS.Center },
     coaches: { equal: 1 },
     budget: { max: spec.budget },
-    benchCount: { equal: 4 },
+    benchCount: { equal: 5 },
     capCount: { equal: 1 },
-    benchCompCount: { equal: 1 },
-    benchGuardLink: { equal: 0 },
-    benchForwardLink: { equal: 0 },
-    benchCenterLink: { equal: 0 },
+    formationCompCount: { equal: 1 },
+    starterGuardLink: { equal: 0 },
+    starterForwardLink: { equal: 0 },
+    starterCenterLink: { equal: 0 },
   };
 
   const anchorIds = opts.anchor?.ids ?? new Set<number>();
@@ -104,6 +102,11 @@ export function solveTeam(
     Guard: "guards",
     Forward: "forwards",
     Center: "centers",
+  };
+  const starterLinkName: Record<Pos, string> = {
+    Guard: "starterGuardLink",
+    Forward: "starterForwardLink",
+    Center: "starterCenterLink",
   };
 
   // real-team caps (<= 6 per real EuroCup team)
@@ -135,6 +138,7 @@ export function solveTeam(
     const benchName = `bench_${p.id}`;
     const capName = `cap_${p.id}`;
     const value = valueById.get(p.id) ?? 0;
+    const linkName = starterLinkName[p.position as Pos];
 
     // x: on roster. A tiny deterministic tie-breaker on the roster coefficient
     // gives the LP a unique optimum — dozens of players share an identical
@@ -146,6 +150,8 @@ export function solveTeam(
       [`team_${p.teamAbbr}`]: 1,
       [`linkBench_${p.id}`]: -1,
       [`linkCap_${p.id}`]: -1,
+      // contributes to the chosen formation's position count unless benched
+      [linkName]: 1,
     };
     for (const g of opts.overlapGroups ?? []) {
       if (g.ids.has(p.id)) xVar[`overlap_${g.label}`] = 1;
@@ -166,13 +172,11 @@ export function solveTeam(
       benchCount: 1,
       [`linkBench_${p.id}`]: 1,
       [`linkCap_${p.id}`]: 1, // captain must not be benched: cap - x + bench <= 0
-      benchGuardLink: p.position === "Guard" ? 1 : 0,
-      benchForwardLink: p.position === "Forward" ? 1 : 0,
-      benchCenterLink: p.position === "Center" ? 1 : 0,
+      [linkName]: -1, // cancel the x contribution: a benched player isn't a starter
     };
     binaries.push(benchName);
 
-    // captain: +1x extra value; must be a non-bench roster player
+    // captain: +1x extra value; must be a starter (non-bench roster player)
     constraints[`linkCap_${p.id}`] = { max: 0 };
     variables[capName] = {
       score: value,
@@ -182,16 +186,15 @@ export function solveTeam(
     binaries.push(capName);
   }
 
-  // bench composition selector
-  NON_BENCH_COMPS.forEach((nb, k) => {
-    const bc = benchComp(nb);
-    variables[`benchComp_${k}`] = {
-      benchCompCount: 1,
-      benchGuardLink: -bc[0],
-      benchForwardLink: -bc[1],
-      benchCenterLink: -bc[2],
+  // formation selector — choose exactly one of the 5 legal starter shapes
+  FORMATIONS.forEach((f, k) => {
+    variables[`formationComp_${k}`] = {
+      formationCompCount: 1,
+      starterGuardLink: -f.comp[0],
+      starterForwardLink: -f.comp[1],
+      starterCenterLink: -f.comp[2],
     };
-    binaries.push(`benchComp_${k}`);
+    binaries.push(`formationComp_${k}`);
   });
 
   for (const p of coaches) {
@@ -261,37 +264,25 @@ export function solveTeam(
   const picked = new Set<number>();
   const benched = new Set<number>();
   let captainId: number | null = null;
+  let formationK: number | null = null;
   for (const [name, val] of solution.variables) {
     if (val < 0.5) continue;
+    if (name.startsWith("formationComp_")) {
+      formationK = Number(name.slice("formationComp_".length));
+      continue;
+    }
     const id = Number(name.slice(name.indexOf("_") + 1));
     if (name.startsWith("x_")) picked.add(id);
     else if (name.startsWith("bench_")) benched.add(id);
     else if (name.startsWith("cap_")) captainId = id;
   }
+  const formation = formationK != null ? FORMATIONS[formationK] : null;
 
   const rosterPlayers = [...picked].map((id) => byId.get(id)!).filter(Boolean);
-  const coachPlayer = rosterPlayers.find((p) => p.position === "Head Coach") ?? null;
-  const nonCoachRoster = rosterPlayers.filter((p) => p.position !== "Head Coach");
-  const nonBench = nonCoachRoster.filter((p) => !benched.has(p.id));
-
-  const seat =
-    captainId != null
-      ? seatLineup(
-          nonBench.map((p) => ({ id: p.id, position: p.position as Pos, mean: p.mean })),
-          captainId,
-        )
-      : null;
-  const sixthId = seat?.sixthMan.id ?? null;
 
   const rows: RosterPlayer[] = rosterPlayers.map((p) => {
     const slot: RosterPlayer["slot"] =
-      p.position === "Head Coach"
-        ? "coach"
-        : benched.has(p.id)
-          ? "bench"
-          : p.id === sixthId
-            ? "sixth"
-            : "starter";
+      p.position === "Head Coach" ? "coach" : benched.has(p.id) ? "bench" : "starter";
     const isCaptain = p.id === captainId;
     const weight = slot === "bench" ? 0.5 : 1;
     const capMult = isCaptain ? 2 : 1;
@@ -307,13 +298,12 @@ export function solveTeam(
   const creditsUsed = rosterPlayers.reduce((s, p) => s + p.quotation, 0);
   const projPoints = rows.reduce((s, r) => s + r.weightedMean, 0);
 
-  void coachPlayer;
   return {
     spec,
     status: "optimal",
     players: rows.sort(bySlotThenValue),
-    formationId: seat?.formationId ?? null,
-    formationName: seat?.formationName ?? null,
+    formationId: formation?.id ?? null,
+    formationName: formation?.name ?? null,
     captainId,
     creditsUsed: Math.round(creditsUsed * 10) / 10,
     strategyScore: Math.round(solution.result * 100) / 100,
@@ -326,7 +316,7 @@ function tieBreak(id: number): number {
   return (((id * 2654435761) >>> 0) % 100000) / 1e8;
 }
 
-const SLOT_ORDER = { coach: 0, starter: 1, sixth: 2, bench: 3 } as const;
+const SLOT_ORDER = { coach: 0, starter: 1, bench: 2 } as const;
 function bySlotThenValue(a: RosterPlayer, b: RosterPlayer): number {
   if (a.slot !== b.slot) return SLOT_ORDER[a.slot] - SLOT_ORDER[b.slot];
   return b.mean - a.mean;
