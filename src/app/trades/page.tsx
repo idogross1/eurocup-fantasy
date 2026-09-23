@@ -1,8 +1,12 @@
 import { db } from "@/db";
+import { buildAgentPrompt } from "@/lib/agentPrompt";
+import { LEAGUE } from "@/lib/league";
 import { getCurrentMatchday } from "@/lib/players";
+import { getTeamsForCurrentMatchday } from "@/lib/teams";
 import { computeTradePlan, type TradeMove } from "@/lib/trades/plan";
 
 import { RebuildBanner } from "../rebuild-banner";
+import { CopyPromptButton } from "./copy-prompt-button";
 import { regenerate, setApplied } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +21,8 @@ const MODE_LABEL: Record<string, string> = {
 export default async function TradesPage() {
   const md = await getCurrentMatchday();
   const plan = md ? await computeTradePlan(db, md.id) : null;
+  const { teams: teamViews } = await getTeamsForCurrentMatchday();
+  const teamViewById = new Map(teamViews.map((t) => [t.id, t]));
 
   return (
     <div className="space-y-6">
@@ -71,28 +77,40 @@ export default async function TradesPage() {
                   <span className="ml-2 text-xs text-[var(--muted)]">↔ {t.realTeamName}</span>
                 )}
               </div>
-              {t.moves.length > 0 && (
-                <div className="flex gap-4 text-sm tabular-nums">
-                  <span>
-                    <span className="text-[var(--muted)]">Moves </span>
-                    {t.moveCount}
-                  </span>
-                  <span>
-                    <span className="text-[var(--muted)]">Δcr </span>
-                    <span className={t.creditDelta > 0 ? "text-amber-400" : ""}>
-                      {t.creditDelta > 0 ? "+" : ""}
-                      {t.creditDelta}
+              <div className="flex items-center gap-3">
+                {teamViewById.has(t.fantasyTeamId) && (
+                  <CopyPromptButton
+                    prompt={buildAgentPrompt(
+                      teamViewById.get(t.fantasyTeamId)!,
+                      t,
+                      LEAGUE.shortName,
+                      plan!.window,
+                    )}
+                  />
+                )}
+                {t.moves.length > 0 && (
+                  <div className="flex gap-4 text-sm tabular-nums">
+                    <span>
+                      <span className="text-[var(--muted)]">Moves </span>
+                      {t.moveCount}
                     </span>
-                  </span>
-                  <span>
-                    <span className="text-[var(--muted)]">Δproj </span>
-                    <span className={t.projDelta >= 0 ? "text-emerald-400" : "text-red-400"}>
-                      {t.projDelta > 0 ? "+" : ""}
-                      {t.projDelta}
+                    <span>
+                      <span className="text-[var(--muted)]">Δcr </span>
+                      <span className={t.creditDelta > 0 ? "text-amber-400" : ""}>
+                        {t.creditDelta > 0 ? "+" : ""}
+                        {t.creditDelta}
+                      </span>
                     </span>
-                  </span>
-                </div>
-              )}
+                    <span>
+                      <span className="text-[var(--muted)]">Δproj </span>
+                      <span className={t.projDelta >= 0 ? "text-emerald-400" : "text-red-400"}>
+                        {t.projDelta > 0 ? "+" : ""}
+                        {t.projDelta}
+                      </span>
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
 
             <p className="px-4 pt-3 text-xs text-[var(--muted)]">{t.note}</p>
