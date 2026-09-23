@@ -8,6 +8,14 @@ import { getCurrentMatchday, type MatchdayRow } from "./players";
 
 type DB = Db;
 type Pos = "Guard" | "Forward" | "Center";
+type Slot = "starter" | "sixth" | "bench" | "coach";
+
+const SLOT_PHRASE: Record<Slot, string> = {
+  starter: "starter",
+  sixth: "6th man",
+  bench: "bench",
+  coach: "coach",
+};
 
 export type PlanPlayer = {
   id: number;
@@ -17,15 +25,15 @@ export type PlanPlayer = {
   opponentAbbr: string | null;
   mean: number;
   roundNumber: number | null; // which turn (game-day) this player's club plays
-  rosterSlot: "starter" | "bench" | "coach"; // recommended slot for the round
+  rosterSlot: Slot; // recommended slot for the round
   isCaptain: boolean; // recommended captain for the round
 };
 
 /**
  * Comparison against your actual saved lineup in the app (from the last sync).
- * Scoped to *lineup* (starter/bench/captain) only — a mismatch in which 11
- * players you own is a Trades concern, flagged here as "roster-mismatch" and
- * left for that page.
+ * Scoped to *lineup* (starter/6th man/bench/captain) only — a mismatch in
+ * which 11 players you own is a Trades concern, flagged here as
+ * "roster-mismatch" and left for that page.
  */
 export type LineupCheck =
   | { status: "unsynced" }
@@ -35,10 +43,11 @@ export type LineupCheck =
 
 export type TurnPlan = {
   turn: number;
-  starters: (PlanPlayer & { playing: boolean })[];
-  bench: (PlanPlayer & { playing: boolean })[];
+  starters: (PlanPlayer & { playing: boolean })[]; // 5, position-locked to the round's formation
+  sixth: (PlanPlayer & { playing: boolean }) | null; // 1, any position
+  bench: (PlanPlayer & { playing: boolean })[]; // 4
   coach: (PlanPlayer & { playing: boolean }) | null;
-  captain: PlanPlayer | null;
+  captain: PlanPlayer | null; // from the 5 starters only, per the game's rules
   swaps: { in: PlanPlayer; out: PlanPlayer }[];
   note: string;
 };
@@ -53,26 +62,26 @@ export type TeamPlan = {
 };
 
 /**
- * The turn-optimal assignment for one position: among all roster players of
- * that position, the ones with a game this turn — highest projection first —
- * fill the (fixed, from the round's formation) number of 100% slots; the rest
- * sit at 50%. This can never fail to find a "legal formation" — the per-
- * position starter counts never change turn to turn, only *which* player of
- * that position fills them — so unlike a from-scratch formation search, there
- * is no "no legal formation" failure mode.
+ * Among a pool of same-tier candidates, fill `count` 100%-weighted slots with
+ * whoever has a game this turn — highest projection first — then bench/spill
+ * the rest. Used twice: once per position (to fill the formation-locked
+ * starter slots) and once more, position-agnostic, on the leftover pool (to
+ * pick the one 6th man). Because the *count* requested never changes turn to
+ * turn — only *who* fills it does — this can never fail to find a "legal"
+ * assignment the way a from-scratch formation search could.
  */
 function turnOptimalSplit(
-  positionRoster: PlanPlayer[],
-  starterCount: number,
+  pool: PlanPlayer[],
+  count: number,
   turn: number,
-): { starters: PlanPlayer[]; bench: PlanPlayer[] } {
-  const sorted = [...positionRoster].sort((a, b) => {
+): { filled: PlanPlayer[]; rest: PlanPlayer[] } {
+  const sorted = [...pool].sort((a, b) => {
     const aPlay = a.roundNumber === turn;
     const bPlay = b.roundNumber === turn;
     if (aPlay !== bPlay) return aPlay ? -1 : 1;
     return b.mean - a.mean;
   });
-  return { starters: sorted.slice(0, starterCount), bench: sorted.slice(starterCount) };
+  return { filled: sorted.slice(0, count), rest: sorted.slice(count) };
 }
 
 function computeTurnPlan(
@@ -87,17 +96,30 @@ function computeTurnPlan(
     byPos.set(p.position as Pos, list);
   }
 
+  // 1. fill the 5 position-locked starter slots first (formation is fixed for the round)
   const starters: PlanPlayer[] = [];
-  const bench: PlanPlayer[] = [];
+  const leftoverPool: PlanPlayer[] = [];
   for (const [, list] of byPos) {
     const starterCount = list.filter((p) => p.rosterSlot === "starter").length;
     const split = turnOptimalSplit(list, starterCount, turn);
-    starters.push(...split.starters);
-    bench.push(...split.bench);
+    starters.push(...split.filled);
+    leftoverPool.push(...split.rest);
   }
 
-  const promoted = starters.filter((p) => p.rosterSlot === "bench");
-  const demoted = bench.filter((p) => p.rosterSlot === "starter");
+  // 2. the single best of what's left (any position) is the 6th man; the rest are bench
+  const sixthSplit = turnOptimalSplit(leftoverPool, 1, turn);
+  const sixth = sixthSplit.filled[0] ?? null;
+  const bench = sixthSplit.rest;
+
+  // swap instructions: compare the effective "100% group" (starters + sixth)
+  // against the round's base assignment, regardless of which of the two
+  // sub-roles each side of a swap lands in
+  const field = sixth ? [...starters, sixth] : starters;
+  const baseField = outfield.filter((p) => p.rosterSlot === "starter" || p.rosterSlot === "sixth");
+  const fieldIds = new Set(field.map((p) => p.id));
+  const baseFieldIds = new Set(baseField.map((p) => p.id));
+  const promoted = field.filter((p) => !baseFieldIds.has(p.id));
+  const demoted = baseField.filter((p) => !fieldIds.has(p.id));
   const swaps = promoted
     .sort((a, b) => b.mean - a.mean)
     .map((inP, i) => ({ in: inP, out: demoted[i] }))
@@ -112,7 +134,10 @@ function computeTurnPlan(
     swaps.length === 0
       ? `No changes needed for Turn ${turn} — your saved lineup already covers it.`
       : swaps
-          .map((s) => `Swap in ${s.in.name} for ${s.out.name} (both ${s.in.position}s)`)
+          .map((s) => {
+            const samePos = s.in.position === s.out.position;
+            return `Swap in ${s.in.name} for ${s.out.name}${samePos ? ` (both ${s.in.position}s)` : ""}`;
+          })
           .join("; ") + ".";
 
   const withPlaying = (p: PlanPlayer) => ({ ...p, playing: p.roundNumber === turn });
@@ -120,6 +145,7 @@ function computeTurnPlan(
   return {
     turn,
     starters: starters.map(withPlaying).sort((a, b) => b.mean - a.mean),
+    sixth: sixth ? withPlaying(sixth) : null,
     bench: bench.map(withPlaying).sort((a, b) => b.mean - a.mean),
     coach: coach ? withPlaying(coach) : null,
     captain,
@@ -161,9 +187,11 @@ async function buildLineupCheck(
   const fixes: string[] = [];
   for (const p of owned) {
     const actual = actualByPlayer.get(p.id)!;
-    const actualSlot = actual.slot === "bench" ? "bench" : "starter";
+    const actualSlot = (actual.slot as Slot | null) ?? "bench";
     if (actualSlot !== p.rosterSlot) {
-      fixes.push(`${p.name}: currently ${actualSlot} in the app — move to ${p.rosterSlot}`);
+      fixes.push(
+        `${p.name}: currently ${SLOT_PHRASE[actualSlot]} in the app — move to ${SLOT_PHRASE[p.rosterSlot]}`,
+      );
     }
   }
 
@@ -256,7 +284,7 @@ export async function getRoundPlan(db: DB): Promise<{
       opponentAbbr: r.opponentAbbr ?? null,
       mean: r.mean ?? 0,
       roundNumber: r.roundNumber ?? null,
-      rosterSlot: r.slot as "starter" | "bench" | "coach",
+      rosterSlot: r.slot as Slot,
       isCaptain: r.isCaptain,
     });
 

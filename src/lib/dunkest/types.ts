@@ -25,6 +25,8 @@ export type DunkPlayer = {
   opponent?: DunkTeamRef;
   round?: { id?: number; number?: number };
   started_from_bench?: boolean;
+  /** the app's own roster slot index: 1-5 starters, 6 sixth man, 7-10 bench, 11 coach */
+  court_position?: number;
   label?: string;
   is_captain?: boolean;
   role?: string;

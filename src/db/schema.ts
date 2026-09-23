@@ -131,10 +131,12 @@ export const fantasyTeams = sqliteTable("fantasy_teams", {
   dunkestTeamId: integer("dunkest_team_id"),
 });
 
-// Confirmed against the live Dunkest API (2026-09): 5 starters (100%) + 5
-// bench (50%) + 1 coach (100%). No separate "6th man" slot this season,
-// despite the rules-doc text — see src/lib/optimizer/formations.ts.
-export const ROSTER_SLOTS = ["starter", "bench", "coach"] as const;
+// Confirmed live in the app (2026-09-23, in-app "Substitute" screen): 5
+// starters + 1 sixth man + 4 bench + 1 coach. Starters + sixth man + coach
+// score 100%; bench scores 50%. The live roster API doesn't expose a "sixth
+// man" field directly — see slotsFromRoster() in src/lib/dunkest/sync.ts for
+// how it's derived from court_position.
+export const ROSTER_SLOTS = ["starter", "sixth", "bench", "coach"] as const;
 export type RosterSlot = (typeof ROSTER_SLOTS)[number];
 
 /** Optimizer / manual / synced lineups per team per matchday. Empty until step 3. */

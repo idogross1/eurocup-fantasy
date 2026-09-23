@@ -72,16 +72,22 @@ export function solveTeam(
   const nonCoach = pool.filter((p) => p.position !== "Head Coach");
   const coaches = pool.filter((p) => p.position === "Head Coach");
 
-  // Roster is exactly 5 starters (100%) + 5 bench (50%) + 1 coach (100%) — see
-  // formations.ts. The starters' G/F/C counts must match one of the 5 legal
-  // formations exactly, via the starter{Pos}Link constraints below.
+  // Roster is 5 starters + 1 sixth man + 4 bench (all outfield) + 1 coach.
+  // Starters + sixth man + coach score 100%; bench scores 50%. Confirmed live
+  // in the app (2026-09-23) — the roster API only exposes started_from_bench
+  // (true for both the sixth man and true bench), so this distinction is
+  // internal to us; see slotsFromRoster() in dunkest/sync.ts for how it's
+  // recovered from a synced roster. The 5 starters' G/F/C counts must match
+  // one of the 5 legal formations exactly, via the starter{Pos}Link
+  // constraints below; the sixth man is free of that constraint.
   const constraints: Record<string, { equal?: number; max?: number; min?: number }> = {
     guards: { equal: POSITION_COUNTS.Guard },
     forwards: { equal: POSITION_COUNTS.Forward },
     centers: { equal: POSITION_COUNTS.Center },
     coaches: { equal: 1 },
     budget: { max: spec.budget },
-    benchCount: { equal: 5 },
+    benchCount: { equal: 4 },
+    sixthCount: { equal: 1 },
     capCount: { equal: 1 },
     formationCompCount: { equal: 1 },
     starterGuardLink: { equal: 0 },
@@ -136,6 +142,7 @@ export function solveTeam(
   for (const p of nonCoach) {
     const xName = `x_${p.id}`;
     const benchName = `bench_${p.id}`;
+    const sixthName = `sixth_${p.id}`;
     const capName = `cap_${p.id}`;
     const value = valueById.get(p.id) ?? 0;
     const linkName = starterLinkName[p.position as Pos];
@@ -149,8 +156,9 @@ export function solveTeam(
       budget: p.quotation,
       [`team_${p.teamAbbr}`]: 1,
       [`linkBench_${p.id}`]: -1,
+      [`linkSixth_${p.id}`]: -1,
       [`linkCap_${p.id}`]: -1,
-      // contributes to the chosen formation's position count unless benched
+      // contributes to the chosen formation's position count unless benched/sixth
       [linkName]: 1,
     };
     for (const g of opts.overlapGroups ?? []) {
@@ -171,12 +179,24 @@ export function solveTeam(
       score: -0.5 * value,
       benchCount: 1,
       [`linkBench_${p.id}`]: 1,
+      [`linkSixth_${p.id}`]: 1, // can't be both bench and sixth
       [`linkCap_${p.id}`]: 1, // captain must not be benched: cap - x + bench <= 0
       [linkName]: -1, // cancel the x contribution: a benched player isn't a starter
     };
     binaries.push(benchName);
 
-    // captain: +1x extra value; must be a starter (non-bench roster player)
+    // sixth man: full (100%) value, no position constraint, must be on
+    // roster and not benched: sixth - x + bench <= 0
+    constraints[`linkSixth_${p.id}`] = { max: 0 };
+    variables[sixthName] = {
+      sixthCount: 1,
+      [`linkSixth_${p.id}`]: 1,
+      [`linkCap_${p.id}`]: 1, // captain is chosen from the starting five only, not the sixth man
+      [linkName]: -1, // the sixth man doesn't count toward the formation's position link either
+    };
+    binaries.push(sixthName);
+
+    // captain: +1x extra value; must be one of the 5 starters (not bench, not sixth man)
     constraints[`linkCap_${p.id}`] = { max: 0 };
     variables[capName] = {
       score: value,
@@ -263,6 +283,7 @@ export function solveTeam(
 
   const picked = new Set<number>();
   const benched = new Set<number>();
+  const sixthSet = new Set<number>();
   let captainId: number | null = null;
   let formationK: number | null = null;
   for (const [name, val] of solution.variables) {
@@ -274,6 +295,7 @@ export function solveTeam(
     const id = Number(name.slice(name.indexOf("_") + 1));
     if (name.startsWith("x_")) picked.add(id);
     else if (name.startsWith("bench_")) benched.add(id);
+    else if (name.startsWith("sixth_")) sixthSet.add(id);
     else if (name.startsWith("cap_")) captainId = id;
   }
   const formation = formationK != null ? FORMATIONS[formationK] : null;
@@ -282,7 +304,13 @@ export function solveTeam(
 
   const rows: RosterPlayer[] = rosterPlayers.map((p) => {
     const slot: RosterPlayer["slot"] =
-      p.position === "Head Coach" ? "coach" : benched.has(p.id) ? "bench" : "starter";
+      p.position === "Head Coach"
+        ? "coach"
+        : benched.has(p.id)
+          ? "bench"
+          : sixthSet.has(p.id)
+            ? "sixth"
+            : "starter";
     const isCaptain = p.id === captainId;
     const weight = slot === "bench" ? 0.5 : 1;
     const capMult = isCaptain ? 2 : 1;
@@ -316,7 +344,7 @@ function tieBreak(id: number): number {
   return (((id * 2654435761) >>> 0) % 100000) / 1e8;
 }
 
-const SLOT_ORDER = { coach: 0, starter: 1, bench: 2 } as const;
+const SLOT_ORDER = { coach: 0, starter: 1, sixth: 2, bench: 3 } as const;
 function bySlotThenValue(a: RosterPlayer, b: RosterPlayer): number {
   if (a.slot !== b.slot) return SLOT_ORDER[a.slot] - SLOT_ORDER[b.slot];
   return b.mean - a.mean;

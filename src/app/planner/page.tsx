@@ -17,8 +17,8 @@ export default async function PlannerPage() {
           {turns.length
             ? `${turns.length} turns (game days): ${turns.map((t) => `T${t}`).join(", ")}`
             : "no turn data yet — sync"}
-          . Roster is 5 starters (100%) + 5 bench (50%) + coach (100%); a player&apos;s turn is
-          the day their real club plays.
+          . Roster is 5 starters + 6th man + coach (100%) and 4 bench (50%); a player&apos;s turn
+          is the day their real club plays.
         </p>
       </div>
 
@@ -126,7 +126,8 @@ function TurnCard({ tp }: { tp: TurnPlan }) {
         {tp.note}
       </p>
 
-      <PlayerList label="Field (100%)" players={tp.starters} captainId={tp.captain?.id} />
+      <PlayerList label="Starters (100%)" players={tp.starters} captainId={tp.captain?.id} />
+      <PlayerList label="6th man (100%)" players={tp.sixth ? [tp.sixth] : []} />
       <PlayerList label="Bench (50%)" players={tp.bench} muted />
     </div>
   );

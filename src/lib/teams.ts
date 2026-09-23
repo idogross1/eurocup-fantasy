@@ -31,7 +31,7 @@ export type TeamView = {
   players: TeamRosterPlayer[];
 };
 
-const SLOT_ORDER: Record<string, number> = { coach: 0, starter: 1, bench: 2 };
+const SLOT_ORDER: Record<string, number> = { coach: 0, starter: 1, sixth: 2, bench: 3 };
 
 export async function getTeamsForCurrentMatchday(): Promise<{
   matchday: Awaited<ReturnType<typeof getCurrentMatchday>>;

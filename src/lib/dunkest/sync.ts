@@ -31,13 +31,31 @@ function isCaptainFlag(p: DunkPlayer): boolean {
   return Boolean(p.is_captain || p.role === "captain" || p.slot === "captain");
 }
 
-function slotFrom(p: DunkPlayer): string | null {
-  if (p.slot) return p.slot;
-  if (p.role) return p.role;
-  if (typeof p.started_from_bench === "boolean") {
-    return p.started_from_bench ? "bench" : "starter";
+/**
+ * Slot for every player on one roster response. `started_from_bench` alone
+ * can't tell the 6th man apart from true bench — it's `true` for both (the
+ * live API's own `num_bench_players: 5` bundles them). Confirmed live
+ * (2026-09-23, in-app "Substitute" screen): the roster is 5 starters + 1
+ * sixth man + 4 bench + 1 coach, and `court_position` is the app's own slot
+ * index — 1-5 starters, 6 sixth man, 7-10 bench, 11 coach. So among the
+ * started_from_bench:true outfield players, the lowest court_position is the
+ * sixth man; the rest are bench.
+ */
+function slotsFromRoster(players: DunkPlayer[]): Map<number, "starter" | "sixth" | "bench" | "coach"> {
+  const out = new Map<number, "starter" | "sixth" | "bench" | "coach">();
+  const benchLike = players
+    .filter((p) => p.position?.name !== "Head Coach" && p.started_from_bench)
+    .sort((a, b) => (a.court_position ?? 0) - (b.court_position ?? 0));
+  // only trust the ordering if court_position is actually present — else we
+  // can't tell the 6th man from bench, so leave them all "bench" rather than
+  // guess.
+  const canDetectSixth = benchLike.some((p) => typeof p.court_position === "number");
+  for (const p of players) {
+    if (p.position?.name === "Head Coach") out.set(p.id, "coach");
+    else if (!p.started_from_bench) out.set(p.id, "starter");
+    else out.set(p.id, canDetectSixth && p.id === benchLike[0]?.id ? "sixth" : "bench");
   }
-  return null;
+  return out;
 }
 
 export type SyncSummary = {
@@ -282,6 +300,7 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
 
     const roster = await api.roster(ft.id, mdId);
     const rosterPlayers = roster.data?.players ?? [];
+    const rosterSlots = slotsFromRoster(rosterPlayers);
     const rosterSyncedAt = new Date().toISOString();
     await runBatched(db, [
       db
@@ -296,7 +315,7 @@ async function runSync(db: DB, opts: SyncOptions): Promise<SyncSummary> {
               dunkestTeamId: ft.id,
               matchdayId: mdId,
               playerId: rp.id,
-              slot: slotFrom(rp),
+              slot: rosterSlots.get(rp.id) ?? null,
               isCaptain: isCaptainFlag(rp),
               formationId: roster.data?.formation_id ?? null,
               syncedAt: rosterSyncedAt,

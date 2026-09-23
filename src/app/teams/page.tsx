@@ -13,6 +13,7 @@ const STRATEGY_BLURB: Record<string, string> = {
 const SLOT_LABEL: Record<string, string> = {
   coach: "Coach",
   starter: "Starter",
+  sixth: "6th man",
   bench: "Bench",
 };
 
