@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 
 import { schema, type Db } from "@/db/connection";
 import type { PlayerPosition } from "@/db/schema";
+import { getSetting } from "@/lib/kv";
 import { FORMATIONS } from "@/lib/optimizer/formations";
 
 import { getCurrentMatchday, type MatchdayRow } from "./players";
@@ -34,9 +35,18 @@ export type PlanPlayer = {
  * Scoped to *lineup* (starter/6th man/bench/captain) only — a mismatch in
  * which 11 players you own is a Trades concern, flagged here as
  * "roster-mismatch" and left for that page.
+ *
+ * "too-early": verified against a live, unmodified roster (2026-09-23, ~27h
+ * before Round 1's actual start) that the roster API's `started_from_bench` /
+ * `court_position` fields do NOT reliably reflect your saved lineup before a
+ * round starts — 3 of 10 outfield players came back on the wrong side of the
+ * 100%/50% split versus what the app itself showed. So this check sits out
+ * entirely until the round has started, rather than report confident, wrong
+ * fixes off data that isn't trustworthy yet.
  */
 export type LineupCheck =
   | { status: "unsynced" }
+  | { status: "too-early" }
   | { status: "roster-mismatch"; realTeamName: string; missingCount: number }
   | { status: "match"; realTeamName: string }
   | { status: "needs-fix"; realTeamName: string; fixes: string[] };
@@ -161,6 +171,11 @@ async function buildLineupCheck(
   syncedTeam: { dunkestTeamId: number; name: string } | undefined,
 ): Promise<LineupCheck> {
   if (!syncedTeam) return { status: "unsynced" };
+
+  const round = await getSetting<{ startedAt: string | null }>(db, "currentRound");
+  if (!round?.startedAt || new Date() < new Date(round.startedAt)) {
+    return { status: "too-early" };
+  }
 
   const actualRows = await db
     .select({

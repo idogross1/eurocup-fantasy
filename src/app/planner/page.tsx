@@ -66,6 +66,16 @@ function LineupCheckBadge({ check }: { check: LineupCheck }) {
       </span>
     );
   }
+  if (check.status === "too-early") {
+    return (
+      <span
+        className="rounded bg-[var(--panel-2)] px-2 py-1 text-xs text-[var(--muted)]"
+        title="Verified live: the app's roster data doesn't reliably reflect your saved lineup until the round actually starts, so this check sits out until then."
+      >
+        Lineup check unavailable until the round starts
+      </span>
+    );
+  }
   if (check.status === "roster-mismatch") {
     return (
       <span className="rounded bg-amber-500/15 px-2 py-1 text-xs text-amber-400">
