@@ -1,12 +1,12 @@
 import { db } from "@/db";
-import { buildAgentPrompt } from "@/lib/agentPrompt";
+import { buildAgentPrompt, buildAllTeamsAgentPrompt } from "@/lib/agentPrompt";
 import { LEAGUE } from "@/lib/league";
 import { getRoundPlan } from "@/lib/planner";
 import { getCurrentMatchday } from "@/lib/players";
 import { computeTradePlan, type TradeMove } from "@/lib/trades/plan";
 
+import { CopyPromptButton } from "../copy-prompt-button";
 import { RebuildBanner } from "../rebuild-banner";
-import { CopyPromptButton } from "./copy-prompt-button";
 import { regenerate, setApplied } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -36,11 +36,25 @@ export default async function TradesPage() {
             real app to reach each target roster
           </p>
         </div>
-        <form action={regenerate}>
-          <button className="rounded-md border border-[var(--border)] bg-[var(--panel-2)] px-3 py-1.5 text-sm hover:border-[var(--accent)]">
-            Recompute
-          </button>
-        </form>
+        <div className="flex items-center gap-2">
+          {plan && plan.teams.length > 0 && (
+            <CopyPromptButton
+              label="Copy prompt for all 3 teams"
+              prompt={buildAllTeamsAgentPrompt(
+                plan.teams
+                  .filter((t) => roundPlanById.has(t.fantasyTeamId))
+                  .map((t) => ({ team: roundPlanById.get(t.fantasyTeamId)!, trade: t })),
+                LEAGUE.shortName,
+                plan.window,
+              )}
+            />
+          )}
+          <form action={regenerate}>
+            <button className="rounded-md border border-[var(--border)] bg-[var(--panel-2)] px-3 py-1.5 text-sm hover:border-[var(--accent)]">
+              Recompute
+            </button>
+          </form>
+        </div>
       </div>
 
       <RebuildBanner />

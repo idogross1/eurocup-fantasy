@@ -2,7 +2,13 @@
 
 import { useRef, useState } from "react";
 
-export function CopyPromptButton({ prompt }: { prompt: string }) {
+export function CopyPromptButton({
+  prompt,
+  label = "Copy agent prompt",
+}: {
+  prompt: string;
+  label?: string;
+}) {
   const [copied, setCopied] = useState(false);
   const [showFallback, setShowFallback] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -32,7 +38,7 @@ export function CopyPromptButton({ prompt }: { prompt: string }) {
         }`}
         title="Copy a self-contained prompt for a browser-automation agent (e.g. Claude in Chrome) to apply this in the live app"
       >
-        {copied ? "Copied ✓" : "Copy agent prompt"}
+        {copied ? "Copied ✓" : label}
       </button>
       {showFallback && (
         <div className="mt-2 w-80 rounded-md border border-amber-500/40 bg-amber-500/10 p-2">

@@ -1,25 +1,47 @@
 import { db } from "@/db";
+import { buildAgentPrompt, buildAllTeamsAgentPrompt } from "@/lib/agentPrompt";
+import { LEAGUE } from "@/lib/league";
 import { getRoundPlan, type LineupCheck, type PlanPlayer, type TurnPlan } from "@/lib/planner";
+import { getCurrentMatchday } from "@/lib/players";
+import { computeTradePlan } from "@/lib/trades/plan";
 
+import { CopyPromptButton } from "../copy-prompt-button";
 import { RebuildBanner } from "../rebuild-banner";
 
 export const dynamic = "force-dynamic";
 
 export default async function PlannerPage() {
   const { matchday, turns, teams } = await getRoundPlan(db);
+  // trades data isn't shown here, but the agent prompt needs it (skips the
+  // TRADES step when there's nothing to change, and knows the real team name)
+  const md = matchday ?? (await getCurrentMatchday());
+  const tradePlan = md ? await computeTradePlan(db, md.id) : null;
+  const tradeByFt = new Map((tradePlan?.teams ?? []).map((t) => [t.fantasyTeamId, t]));
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Round planner</h1>
-        <p className="mt-1 text-sm text-[var(--muted)]">
-          {matchday ? `${matchday.label} (Round ${matchday.number})` : "No matchday loaded"} ·{" "}
-          {turns.length
-            ? `${turns.length} turns (game days): ${turns.map((t) => `T${t}`).join(", ")}`
-            : "no turn data yet — sync"}
-          . Roster is 5 starters + 6th man + coach (100%) and 4 bench (50%); a player&apos;s turn
-          is the day their real club plays.
-        </p>
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <div>
+          <h1 className="text-2xl font-semibold">Round planner</h1>
+          <p className="mt-1 text-sm text-[var(--muted)]">
+            {matchday ? `${matchday.label} (Round ${matchday.number})` : "No matchday loaded"} ·{" "}
+            {turns.length
+              ? `${turns.length} turns (game days): ${turns.map((t) => `T${t}`).join(", ")}`
+              : "no turn data yet — sync"}
+            . Roster is 5 starters + 6th man + coach (100%) and 4 bench (50%); a player&apos;s turn
+            is the day their real club plays.
+          </p>
+        </div>
+        {teams.length > 0 && tradePlan && (
+          <CopyPromptButton
+            label="Copy prompt for all 3 teams"
+            prompt={buildAllTeamsAgentPrompt(
+              teams.map((team) => ({ team, trade: tradeByFt.get(team.id) })),
+              LEAGUE.shortName,
+              tradePlan.window,
+            )}
+          />
+        )}
       </div>
 
       <RebuildBanner />
@@ -43,7 +65,12 @@ export default async function PlannerPage() {
                   <span className="ml-2 text-xs text-[var(--muted)]">· {t.formationName}</span>
                 )}
               </div>
-              <LineupCheckBadge check={t.lineupCheck} />
+              <div className="flex items-center gap-3">
+                <CopyPromptButton
+                  prompt={buildAgentPrompt(t, tradeByFt.get(t.id), LEAGUE.shortName, tradePlan!.window)}
+                />
+                <LineupCheckBadge check={t.lineupCheck} />
+              </div>
             </div>
 
             <div className="grid gap-px bg-[var(--border)] sm:grid-cols-2">
