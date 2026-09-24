@@ -1,8 +1,8 @@
 import { db } from "@/db";
 import { buildAgentPrompt } from "@/lib/agentPrompt";
 import { LEAGUE } from "@/lib/league";
+import { getRoundPlan } from "@/lib/planner";
 import { getCurrentMatchday } from "@/lib/players";
-import { getTeamsForCurrentMatchday } from "@/lib/teams";
 import { computeTradePlan, type TradeMove } from "@/lib/trades/plan";
 
 import { RebuildBanner } from "../rebuild-banner";
@@ -21,8 +21,10 @@ const MODE_LABEL: Record<string, string> = {
 export default async function TradesPage() {
   const md = await getCurrentMatchday();
   const plan = md ? await computeTradePlan(db, md.id) : null;
-  const { teams: teamViews } = await getTeamsForCurrentMatchday();
-  const teamViewById = new Map(teamViews.map((t) => [t.id, t]));
+  // same source /planner uses, so the agent prompt's lineup always matches
+  // what /planner shows for the same turn — no more "gap between the two"
+  const { teams: roundPlanTeams } = await getRoundPlan(db);
+  const roundPlanById = new Map(roundPlanTeams.map((t) => [t.id, t]));
 
   return (
     <div className="space-y-6">
@@ -78,10 +80,10 @@ export default async function TradesPage() {
                 )}
               </div>
               <div className="flex items-center gap-3">
-                {teamViewById.has(t.fantasyTeamId) && (
+                {roundPlanById.has(t.fantasyTeamId) && (
                   <CopyPromptButton
                     prompt={buildAgentPrompt(
-                      teamViewById.get(t.fantasyTeamId)!,
+                      roundPlanById.get(t.fantasyTeamId)!,
                       t,
                       LEAGUE.shortName,
                       plan!.window,

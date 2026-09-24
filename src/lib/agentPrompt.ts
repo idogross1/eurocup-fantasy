@@ -1,20 +1,14 @@
+import type { PlanPlayer, TeamPlan, TurnPlan } from "@/lib/planner";
 import type { TeamTradePlan } from "@/lib/trades/plan";
 import type { WindowStatus } from "@/lib/trades/window";
-import type { TeamRosterPlayer, TeamView } from "@/lib/teams";
-
-const SLOT_LABEL: Record<string, string> = {
-  starter: "Starter",
-  sixth: "6th man (100%)",
-  bench: "Bench (50%)",
-  coach: "Head coach",
-};
 
 function posLetter(position: string): string {
   return position === "Head Coach" ? "HC" : position[0];
 }
 
-function playerLine(p: TeamRosterPlayer): string {
-  return `${posLetter(p.position)} ${p.name} (${p.teamAbbr})${p.isCaptain ? " — CAPTAIN" : ""}`;
+function playerLine(p: PlanPlayer, captainId: number | undefined): string {
+  const tag = p.id === captainId ? " — CAPTAIN" : "";
+  return `${posLetter(p.position)} ${p.name} (${p.teamAbbr})${tag}`;
 }
 
 /**
@@ -22,19 +16,29 @@ function playerLine(p: TeamRosterPlayer): string {
  * agent (e.g. Claude in Chrome) to apply one team's recommendation in the
  * live EuroLeague/EuroCup Fantasy app. Pure function — everything it needs is
  * passed in already computed.
+ *
+ * The lineup section must match /planner's per-turn view, not the flat
+ * round-level roster: within a round the best 100%/50% split shifts turn to
+ * turn (a bench player with a game can outrank a starter without one), and
+ * /planner already computes that. Handing the agent the *round-level* slot
+ * assignment instead produced a real, reported gap — e.g. Bar Timor shown as
+ * a Turn-1 starter on /planner but "bench" in this prompt, because this used
+ * to read the static round-level list. Always target the earliest turn that
+ * hasn't happened yet, since that's what's actionable right now.
  */
 export function buildAgentPrompt(
-  team: TeamView,
+  team: TeamPlan,
   trade: TeamTradePlan | undefined,
   leagueShortName: string,
   window: WindowStatus,
 ): string {
   const lines: string[] = [];
+  const teamName = trade?.realTeamName ?? team.name;
 
   lines.push(
-    `Update my ${leagueShortName} Fantasy team "${trade?.realTeamName ?? team.name}" to match the plan below.`,
+    `Update my ${leagueShortName} Fantasy team "${teamName}" to match the plan below.`,
     "",
-    `1. Open https://euroleaguefantasy.euroleaguebasketball.net (log in if needed). Make sure the ${leagueShortName} competition is selected (top dropdown, if there is one). Open the team "${trade?.realTeamName ?? team.name}" → Manage Team.`,
+    `1. Open https://euroleaguefantasy.euroleaguebasketball.net (log in if needed). Make sure the ${leagueShortName} competition is selected (top dropdown, if there is one). Open the team "${teamName}" → Manage Team.`,
   );
 
   // --- Trades ---
@@ -63,28 +67,42 @@ export function buildAgentPrompt(
     );
   }
 
-  // --- Lineup ---
-  const bySlot = (slot: string) => team.players.filter((p) => p.slot === slot);
-  const captain = team.players.find((p) => p.isCaptain);
-
-  lines.push(
-    "",
-    "3. LINEUP",
-    "   I don't know what's currently set for this team, so read the screen first, then use tap-player → Substitute to rearrange the 11-player roster until it matches this exactly:",
-    "",
-    `   Formation: ${team.formationName ?? "(let the players below determine it)"}`,
-    "",
-  );
-  for (const slot of ["starter", "sixth", "bench", "coach"]) {
-    const players = bySlot(slot);
-    if (players.length === 0) continue;
-    lines.push(`   ${SLOT_LABEL[slot]}:`);
-    for (const p of players) lines.push(`     - ${playerLine(p)}`);
+  // --- Lineup: the earliest turn that hasn't happened yet, same as /planner ---
+  lines.push("", "3. LINEUP");
+  const turn: TurnPlan | undefined = team.turns[0];
+  if (!turn) {
+    lines.push("   No turn data available yet — sync first, then regenerate this prompt.");
+  } else {
+    const captainId = turn.captain?.id;
+    lines.push(
+      `   This is the target for Turn ${turn.turn} specifically (game-day ${turn.turn} of this round) —` +
+        " it's the best split for who actually has a game right now, and may differ from a later turn's." +
+        " After Turn 1's games, come back to /planner and I'll give you Turn 2's version if it's different.",
+      "   I don't know what's currently set for this team, so read the screen first, then use tap-player → Substitute to rearrange the 11-player roster until it matches this exactly:",
+      "",
+      `   Formation: ${team.formationName ?? "(let the players below determine it)"}`,
+      "",
+      "   Starters (100%):",
+      ...turn.starters.map((p) => `     - ${playerLine(p, captainId)}${p.playing ? "" : " (no game this turn)"}`),
+    );
+    if (turn.sixth) {
+      lines.push(
+        "   6th man (100%):",
+        `     - ${playerLine(turn.sixth, captainId)}${turn.sixth.playing ? "" : " (no game this turn)"}`,
+      );
+    }
+    lines.push(
+      "   Bench (50%):",
+      ...turn.bench.map((p) => `     - ${playerLine(p, captainId)}${p.playing ? "" : " (no game this turn)"}`),
+    );
+    if (turn.coach) {
+      lines.push("   Head coach:", `     - ${playerLine(turn.coach, undefined)}`);
+    }
+    lines.push(
+      "",
+      `   Captain: ${turn.captain ? turn.captain.name : "(none of the starters have a game this turn — leave the current captain, it won't score anyway)"}${turn.captain ? " — tap them → Captain." : ""}`,
+    );
   }
-  lines.push(
-    "",
-    `   Captain: ${captain ? captain.name : "(see CAPTAIN tag above)"} — tap them → Captain.`,
-  );
 
   lines.push(
     "",
