@@ -11,12 +11,15 @@ import { RebuildBanner } from "../rebuild-banner";
 export const dynamic = "force-dynamic";
 
 export default async function PlannerPage() {
-  const { matchday, turns, teams } = await getRoundPlan(db);
-  // trades data isn't shown here, but the agent prompt needs it (skips the
-  // TRADES step when there's nothing to change, and knows the real team name)
-  const md = matchday ?? (await getCurrentMatchday());
+  // computeTradePlan must run before getRoundPlan: when a team's trades are
+  // capped by the move limit, it rewrites rosterEntries to the reachable
+  // target roster — getRoundPlan's lineup has to see that, not the stale
+  // unconstrained optimum, or the lineup ends up recommending players the
+  // trades above don't actually buy.
+  const md = await getCurrentMatchday();
   const tradePlan = md ? await computeTradePlan(db, md.id) : null;
   const tradeByFt = new Map((tradePlan?.teams ?? []).map((t) => [t.fantasyTeamId, t]));
+  const { matchday, turns, teams } = await getRoundPlan(db);
 
   return (
     <div className="space-y-6">

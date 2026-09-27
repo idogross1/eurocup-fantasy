@@ -5,7 +5,7 @@ import type { PlayerPosition } from "@/db/schema";
 import { getSetting } from "@/lib/kv";
 import { loadOptimizerPool, prefilterPool } from "@/lib/optimizer/run";
 import { solveTeam } from "@/lib/optimizer/solve";
-import type { StrategySpec } from "@/lib/optimizer/types";
+import type { StrategySpec, TeamResult } from "@/lib/optimizer/types";
 
 import { tradeWindowStatus, type WindowStatus } from "./window";
 
@@ -262,6 +262,12 @@ export async function computeTradePlan(db: DB, matchdayId: number): Promise<Trad
       });
       if (res.status === "optimal") {
         targetIds = new Set(res.players.map((p) => p.id));
+        // The move cap means this team's real target is this reachable-within-
+        // maxMoves roster, not the unconstrained global optimum still sitting
+        // in rosterEntries — overwrite it so /planner's lineup (which reads
+        // rosterEntries) recommends slots for the players these trades
+        // actually buy, instead of a roster you can't reach this round.
+        await persistCappedRoster(db, matchdayId, ft.id, res);
       }
     }
 
@@ -363,6 +369,43 @@ async function persist(db: DB, matchdayId: number, teams: TeamTradePlan[]) {
           kind: m.kind,
         });
       }
+    }
+  });
+}
+
+/**
+ * Overwrite one team's "optimizer" rosterEntries with a move-capped re-solve
+ * result, so the lineup planner (which reads rosterEntries, not the trade
+ * plan) targets the same reachable-this-round roster these trades build
+ * toward — not the unconstrained global optimum computed by the last full
+ * refresh.
+ */
+async function persistCappedRoster(
+  db: DB,
+  matchdayId: number,
+  fantasyTeamId: number,
+  res: TeamResult,
+) {
+  await db.transaction(async (tx) => {
+    await tx
+      .delete(schema.rosterEntries)
+      .where(
+        and(
+          eq(schema.rosterEntries.fantasyTeamId, fantasyTeamId),
+          eq(schema.rosterEntries.matchdayId, matchdayId),
+          eq(schema.rosterEntries.source, "optimizer"),
+        ),
+      );
+    for (const p of res.players) {
+      await tx.insert(schema.rosterEntries).values({
+        fantasyTeamId,
+        matchdayId,
+        playerId: p.id,
+        slot: p.slot,
+        isCaptain: p.isCaptain,
+        formationId: res.formationId,
+        source: "optimizer",
+      });
     }
   });
 }
